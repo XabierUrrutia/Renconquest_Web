@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block title %}Panel Admin — Reconquest
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  fetch('/api/admin/downloads_chart')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.labels.length) {
+        document.getElementById('dlChart').style.display = 'none';
+        document.getElementById('chart-empty').style.display = 'block';
+        return;
+      }
+      new Chart(document.getElementById('dlChart'), {
+        type: 'bar',
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: 'Descargas',
+            data: data.data,
+            backgroundColor: 'rgba(87,101,51,.6)',
+            borderColor: '#8C7F3B',
+            borderWidth: 1,
+            borderRadius: 2,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(26,29,15,.95)',
+              borderColor: 'rgba(140,127,59,.3)',
+              borderWidth: 1,
+              titleColor: '#BFBB80',
+              bodyColor: '#8C7F3B',
+              titleFont: { family: "'Share Tech Mono'" },
+              bodyFont:  { family: "'Share Tech Mono'" },
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#6b6a4a', font: { family: "'Share Tech Mono'", size: 10 }, maxRotation: 45 },
+              grid:  { color: 'rgba(87,101,51,.08)' },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: '#6b6a4a', font: { family: "'Share Tech Mono'", size: 11 }, stepSize: 1 },
+              grid:  { color: 'rgba(87,101,51,.08)' },
+            }
+          }
+        }
+      });
+    });
+</script>
+{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+
+{% block head %}
+<style>
+  /* ── ADMIN LAYOUT ───────────────────────────────────────────── */
+  .admin-wrap { max-width:1180px; margin:0 auto; padding:2rem 5vw 5rem; }
+
+  .admin-header {
+    display:flex; align-items:flex-end; justify-content:space-between;
+    margin-bottom:2.5rem; flex-wrap:wrap; gap:1rem;
+  }
+  .admin-header h1 {
+    font-family:'Oswald',sans-serif; font-size:2.2rem; font-weight:700;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--white);
+  }
+  .admin-header h1 span { color:var(--sand); }
+  .admin-tag {
+    font-family:'Share Tech Mono',monospace; font-size:.7rem;
+    letter-spacing:.2em; color:var(--gold);
+    border:1px solid rgba(140,127,59,.25); padding:.3rem .8rem;
+  }
+
+  /* STAT CARDS */
+  .stat-grid {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:2px; margin-bottom:3rem;
+  }
+  .stat-card {
+    background:rgba(26,29,15,.85); border:1px solid rgba(87,101,51,.2);
+    padding:1.5rem 1.6rem;
+  }
+  .stat-card dt {
+    font-family:'Share Tech Mono',monospace; font-size:.66rem;
+    letter-spacing:.22em; text-transform:uppercase; color:var(--muted);
+    margin-bottom:.5rem;
+  }
+  .stat-card dd {
+    font-family:'Oswald',sans-serif; font-size:2.4rem; font-weight:700;
+    color:var(--sand); letter-spacing:.04em;
+  }
+
+  /* SECTION TITLES */
+  .sec-title {
+    font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:500;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--sand);
+    display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem;
+  }
+  .sec-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(140,127,59,.3),transparent); }
+  .sec-tag { font-family:'Share Tech Mono',monospace; font-size:.66rem; letter-spacing:.2em; color:var(--gold); }
+
+  /* TABLE */
+  .table-wrap { overflow-x:auto; margin-bottom:3rem; }
+  table { width:100%; border-collapse:collapse; }
+  thead tr { border-bottom:1px solid rgba(140,127,59,.25); }
+  th {
+    font-family:'Share Tech Mono',monospace; font-size:.66rem;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--gold);
+    padding:.7rem 1rem; text-align:left; white-space:nowrap;
+  }
+  tbody tr {
+    border-bottom:1px solid rgba(87,101,51,.1);
+    transition:background .15s;
+  }
+  tbody tr:hover { background:rgba(87,101,51,.08); }
+  td {
+    padding:.75rem 1rem; font-size:.9rem; color:var(--light);
+    vertical-align:middle; white-space:nowrap;
+  }
+  .td-user { font-weight:600; color:var(--white); }
+  .td-email { color:var(--muted); font-size:.85rem; }
+
+  /* BADGES */
+  .badge {
+    display:inline-block; padding:.2rem .55rem;
+    font-family:'Share Tech Mono',monospace; font-size:.62rem;
+    letter-spacing:.12em; text-transform:uppercase; border:1px solid;
+  }
+  .badge-admin  { color:#c8b96a; border-color:rgba(200,185,106,.35); background:rgba(200,185,106,.08); }
+  .badge-active { color:#7ab87a; border-color:rgba(122,184,122,.3);  background:rgba(122,184,122,.07); }
+  .badge-off    { color:#a07070; border-color:rgba(160,112,112,.3);  background:rgba(160,112,112,.07); }
+
+  /* ACTION BUTTONS */
+  .btn-action {
+    display:inline-block; padding:.28rem .7rem; margin-right:.3rem;
+    font-family:'Share Tech Mono',monospace; font-size:.62rem;
+    letter-spacing:.1em; text-transform:uppercase;
+    border:1px solid; cursor:crosshair; transition:background .15s;
+    background:none;
+  }
+  .btn-toggle  { color:var(--muted); border-color:rgba(107,106,74,.35); }
+  .btn-toggle:hover  { background:rgba(107,106,74,.15); color:var(--light); }
+  .btn-admin   { color:#c8b96a; border-color:rgba(200,185,106,.3); }
+  .btn-admin:hover   { background:rgba(200,185,106,.1); }
+  .btn-delete  { color:#b07070; border-color:rgba(160,112,112,.3); }
+  .btn-delete:hover  { background:rgba(160,112,112,.12); }
+
+  /* DL TABLE */
+  .dl-ts   { font-family:'Share Tech Mono',monospace; font-size:.78rem; color:var(--muted); }
+  .dl-ip   { font-family:'Share Tech Mono',monospace; font-size:.78rem; color:var(--gold); }
+  .dl-user { font-weight:600; color:var(--sand); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+
+  <div class="admin-header">
+    <h1>Panel <span>Admin</span></h1>
+    <span class="admin-tag">// Reconquest v{{ version }}</span>
+  </div>
+
+  <!-- STAT CARDS -->
+  <dl class="stat-grid">
+    <div class="stat-card">
+      <dt>Total usuarios</dt>
+      <dd>{{ total_users }}</dd>
+    </div>
+    <div class="stat-card">
+      <dt>Usuarios activos</dt>
+      <dd>{{ active_users }}</dd>
+    </div>
+    <div class="stat-card">
+      <dt>Descargas totales</dt>
+      <dd>{{ total_downloads }}</dd>
+    </div>
+    <div class="stat-card">
+      <dt>Versión actual</dt>
+      <dd style="font-size:1.6rem;">{{ version }}</dd>
+    </div>
+  </dl>
+
+  <!-- USERS TABLE -->
+  <p class="sec-title"><span class="sec-tag">// 01</span> Gestión de usuarios</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Registro</th>
+          <th>Último acceso</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="color:var(--muted);">{{ u.id }}</td>
+          <td class="td-user">{{ u.username }}</td>
+          <td class="td-email">{{ u.email }}</td>
+          <td>
+            {% if u.is_admin %}
+            <span class="badge badge-admin">Admin</span>
+            {% else %}
+            <span style="color:var(--muted);font-size:.8rem;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}
+            <span class="badge badge-active">Activo</span>
+            {% else %}
+            <span class="badge badge-off">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="dl-ts">{{ u.created_at[:10] }}</td>
+          <td class="dl-ts">{{ u.last_login[:10] if u.last_login else '—' }}</td>
+          <td>
+            {% if u.id != session.user_id %}
+            <form method="POST" action="/admin/user/{{ u.id }}/toggle" style="display:inline">
+              <button class="btn-action btn-toggle" type="submit">
+                {{ 'Desactivar' if u.is_active else 'Activar' }}
+              </button>
+            </form>
+            <form method="POST" action="/admin/user/{{ u.id }}/toggle_admin" style="display:inline">
+              <button class="btn-action btn-admin" type="submit">
+                {{ 'Quitar admin' if u.is_admin else 'Hacer admin' }}
+              </button>
+            </form>
+            <form method="POST" action="/admin/user/{{ u.id }}/delete" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar usuario {{ u.username }}?')">
+              <button class="btn-action btn-delete" type="submit">Eliminar</button>
+            </form>
+            {% else %}
+            <span style="color:var(--muted);font-size:.75rem;font-family:'Share Tech Mono',monospace;">// tú</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- DOWNLOADS CHART -->
+  <p class="sec-title reveal" style="margin-bottom:1.2rem;">
+    <span class="sec-tag">// 01</span> Descargas por día (últimos 30 días)
+  </p>
+  <div class="reveal" style="background:rgba(26,29,15,.85);border:1px solid rgba(87,101,51,.18);
+       padding:1.8rem;margin-bottom:3rem;">
+    <canvas id="dlChart" height="90"></canvas>
+    <p id="chart-empty" style="display:none;font-family:'Share Tech Mono',monospace;
+       font-size:.75rem;letter-spacing:.15em;color:var(--muted);text-align:center;padding:2rem 0;">
+      // Sin datos de descargas todavía
+    </p>
+  </div>
+
+  <!-- REVIEWS LINK -->
+  <div style="margin-bottom:2rem;">
+    <a href="{{ url_for('admin_reviews') }}"
+       style="display:inline-flex;align-items:center;gap:.7rem;padding:.75rem 1.8rem;
+              background:rgba(87,101,51,.15);border:1px solid rgba(140,127,59,.3);
+              font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.14em;
+              text-transform:uppercase;color:#BFBB80;text-decoration:none;transition:background .2s;">
+      ★ Moderar Reseñas
+    </a>
+  </div>
+
+  <!-- DOWNLOAD LOG -->
+  <p class="sec-title"><span class="sec-tag">// 02</span> Últimas descargas</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Usuario</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_dls %}
+          {% for d in recent_dls %}
+          <tr>
+            <td class="dl-ts">{{ d.ts[:19].replace('T',' ') }}</td>
+            <td class="dl-user">{{ d.username or '—' }}</td>
+            <td class="dl-ip">{{ d.ip }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="3" style="color:var(--muted);font-style:italic;padding:1.5rem 1rem;">Sin descargas registradas aún.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

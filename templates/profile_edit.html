@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Editar perfil — Reconquest{% endblock %}
+{% block version %}{% endblock %}
+
+{% block head %}
+<style>
+  .edit-wrap { max-width:600px; margin:0 auto; padding:2.5rem 5vw 5rem; }
+  .edit-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:2.5rem; flex-wrap:wrap; gap:1rem;
+  }
+  .edit-header h1 {
+    font-family:'Oswald',sans-serif; font-size:2rem; font-weight:700;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--white);
+  }
+  .edit-header h1 span { color:var(--sand); }
+  .back-link {
+    font-family:'Share Tech Mono',monospace; font-size:.72rem;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); text-decoration:none; transition:color .2s;
+  }
+  .back-link:hover { color:var(--sand); }
+
+  .edit-block {
+    background:rgba(26,29,15,.85); border:1px solid rgba(87,101,51,.18);
+    padding:2rem; margin-bottom:2px;
+  }
+  .block-title {
+    font-family:'Share Tech Mono',monospace; font-size:.72rem;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--gold);
+    margin-bottom:1.4rem; display:flex; align-items:center; gap:.8rem;
+  }
+  .block-title::after { content:''; flex:1; height:1px; background:rgba(140,127,59,.2); }
+
+  .form-group { margin-bottom:1.1rem; }
+  .form-group label {
+    display:block; font-family:'Share Tech Mono',monospace; font-size:.67rem;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:.4rem;
+  }
+  .form-group input {
+    width:100%; padding:.7rem 1rem;
+    background:rgba(10,11,7,.8); border:1px solid rgba(140,127,59,.22);
+    color:var(--white); font-family:'Rajdhani',sans-serif; font-size:.98rem;
+    outline:none; cursor:text; transition:border-color .2s;
+  }
+  .form-group input:focus { border-color:var(--gold); }
+  .form-group input::placeholder { color:var(--muted); }
+
+  .form-error {
+    background:rgba(139,26,26,.15); border:1px solid rgba(139,26,26,.4);
+    color:#e8b0b0; font-family:'Share Tech Mono',monospace; font-size:.74rem;
+    letter-spacing:.08em; padding:.6rem 1rem; margin-bottom:1.1rem;
+  }
+
+  .btn-save {
+    padding:.8rem 2rem;
+    background:var(--olive); border:2px solid var(--gold);
+    color:var(--sand); font-family:'Oswald',sans-serif;
+    font-size:1.05rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    cursor:crosshair; transition:background .2s, color .2s;
+    clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+  }
+  .btn-save:hover { background:var(--gold); color:var(--dark); }
+
+  /* Avatar preview */
+  .avatar-preview {
+    width:72px; height:72px;
+    border:2px solid rgba(140,127,59,.3);
+    object-fit:cover; margin-top:.8rem;
+    display:none;
+  }
+  .avatar-placeholder-sm {
+    width:72px; height:72px;
+    border:2px solid rgba(140,127,59,.2);
+    background:rgba(87,101,51,.15);
+    display:inline-flex; align-items:center; justify-content:center;
+    margin-top:.8rem;
+  }
+  .avatar-placeholder-sm span {
+    font-family:'Oswald',sans-serif; font-size:1.6rem; font-weight:700; color:var(--gold);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-wrap">
+
+  <div class="edit-header">
+    <h1>Editar <span>Perfil</span></h1>
+    <a href="{{ url_for('profile') }}" class="back-link">← Mi perfil</a>
+  </div>
+
+  {% if error %}
+  <div class="form-error">⚠ {{ error }}</div>
+  {% endif %}
+
+  <!-- AVATAR -->
+  <div class="edit-block">
+    <p class="block-title">Avatar</p>
+    <form method="POST">
+      <input type="hidden" name="action" value="avatar">
+      <div class="form-group">
+        <label>URL de imagen <span style="color:var(--muted);font-size:.62rem;">(enlace directo a una imagen)</span></label>
+        <input type="url" name="avatar_url" id="avatar-input"
+               placeholder="https://ejemplo.com/avatar.png"
+               value="{{ user.avatar_url or '' }}">
+      </div>
+      <div style="margin-bottom:1rem;">
+        {% if user.avatar_url %}
+          <img id="avatar-preview" class="avatar-preview" src="{{ user.avatar_url }}" style="display:block;" alt="Avatar actual">
+        {% else %}
+          <div class="avatar-placeholder-sm"><span>{{ user.username[0].upper() }}</span></div>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn-save">Guardar avatar</button>
+    </form>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="edit-block">
+    <p class="block-title">Cambiar email</p>
+    <form method="POST">
+      <input type="hidden" name="action" value="email">
+      <div class="form-group">
+        <label>Nuevo email</label>
+        <input type="email" name="email" placeholder="{{ user.email }}" required>
+      </div>
+      <button type="submit" class="btn-save">Guardar email</button>
+    </form>
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="edit-block">
+    <p class="block-title">Cambiar contraseña</p>
+    <form method="POST">
+      <input type="hidden" name="action" value="password">
+      <div class="form-group">
+        <label>Contraseña actual</label>
+        <input type="password" name="current" placeholder="••••••••" required>
+      </div>
+      <div class="form-group">
+        <label>Nueva contraseña <span style="color:var(--muted);font-size:.62rem;">(mínimo 8 caracteres)</span></label>
+        <input type="password" name="password" placeholder="••••••••" required minlength="8">
+      </div>
+      <div class="form-group">
+        <label>Confirmar nueva contraseña</label>
+        <input type="password" name="confirm" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-save">Cambiar contraseña</button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+  // Live avatar preview
+  const input   = document.getElementById('avatar-input');
+  const preview = document.getElementById('avatar-preview');
+  if (input && preview) {
+    input.addEventListener('input', () => {
+      if (input.value) {
+        preview.src = input.value;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    });
+  }
+</script>
+{% endblock %}

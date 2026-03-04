@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Nueva contraseña — Reconquest{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Reconquest">
+    </div>
+    <h1 class="auth-title">Nueva clave</h1>
+    <p class="auth-sub">// Establece una nueva contraseña</p>
+
+    {% if invalid %}
+    <div class="form-error">
+      ⚠ Este enlace no es válido o ha expirado.<br>
+      <a href="{{ url_for('forgot') }}" style="color:var(--sand);">Solicitar uno nuevo</a>
+    </div>
+
+    {% else %}
+    {% if error %}
+    <div class="form-error">⚠ {{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label>Nueva contraseña <span style="color:var(--muted);font-size:.65rem">(mínimo 8 caracteres)</span></label>
+        <input type="password" name="password" placeholder="••••••••" required minlength="8" autofocus>
+      </div>
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <input type="password" name="confirm" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-submit">Guardar Contraseña</button>
+    </form>
+    {% endif %}
+
+    <div class="auth-links">
+      <a href="{{ url_for('login') }}">← Volver al login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

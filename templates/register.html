@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Registro — Reconquest{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Reconquest">
+    </div>
+    <h1 class="auth-title">Registro</h1>
+    <p class="auth-sub">// Únete a la resistencia</p>
+
+    {% if error %}
+    <div class="form-error">⚠ {{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label>Nombre de usuario</label>
+        <input type="text" name="username" placeholder="comandante_x" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="correo@dominio.com" required>
+      </div>
+      <div class="form-group">
+        <label>Contraseña <span style="color:var(--muted);font-size:.65rem">(mínimo 8 caracteres)</span></label>
+        <input type="password" name="password" placeholder="••••••••" required minlength="8">
+      </div>
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <input type="password" name="confirm" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-submit">Crear Cuenta</button>
+    </form>
+
+    <div class="auth-links">
+      ¿Ya tienes cuenta? <span>·</span>
+      <a href="{{ url_for('login') }}">Iniciar sesión</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

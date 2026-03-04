@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RECONQUEST — Descarga Oficial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@300;400;500;700&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── VARIABLES ───────────────────────────────────────── */
+    :root {
+      --gold:     #8C7F3B;
+      --olive:    #576533;
+      --sand:     #BFBB80;
+      --dark:     #0a0b07;
+      --ink:      #111309;
+      --mid:      #1a1d0f;
+      --dim:      #2a2e18;
+      --muted:    #6b6a4a;
+      --light:    #d4d09e;
+      --white:    #eeecd4;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--light);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 400;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* ── SCANLINES OVERLAY ────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.08) 2px,
+        rgba(0,0,0,.08) 4px
+      );
+    }
+
+    /* ── PIXEL GRID BG ───────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(87,101,51,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(87,101,51,.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* ── NAV ──────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .9rem 5vw;
+      background: rgba(10,11,7,.92);
+      border-bottom: 1px solid rgba(140,127,59,.2);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: .8rem;
+      text-decoration: none;
+    }
+    .nav-logo img {
+      height: 36px; width: auto;
+      image-rendering: pixelated;
+    }
+    .nav-logo span {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: .2em;
+      color: var(--sand);
+    }
+
+    .nav-links {
+      display: flex; gap: 2rem; list-style: none;
+    }
+    .nav-links a {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .78rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--sand); }
+
+    /* ── HERO ─────────────────────────────────────────────── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      text-align: center;
+      padding: 8rem 5vw 5rem;
+      overflow: hidden;
+    }
+
+    /* Hex pattern */
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(87,101,51,.3) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(140,127,59,.12) 0%, transparent 60%),
+        radial-gradient(ellipse 30% 50% at 80% 20%, rgba(191,187,128,.06) 0%, transparent 50%),
+        var(--dark);
+    }
+
+    /* Corner brackets */
+    .bracket {
+      position: absolute; z-index: 1;
+      width: 60px; height: 60px;
+      pointer-events: none;
+    }
+    .bracket--tl { top: 5rem; left: 5vw; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+    .bracket--tr { top: 5rem; right: 5vw; border-top: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+    .bracket--bl { bottom: 4rem; left: 5vw; border-bottom: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+    .bracket--br { bottom: 4rem; right: 5vw; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+
+    .hero-logo {
+      position: relative; z-index: 1;
+      width: clamp(160px, 20vw, 240px);
+      image-rendering: pixelated;
+      opacity: 0;
+      animation: dropIn .7s .1s cubic-bezier(.22,1,.36,1) forwards;
+      filter: drop-shadow(0 0 24px rgba(140,127,59,.5));
+    }
+
+    .hero-eyebrow {
+      position: relative; z-index: 1;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .78rem;
+      letter-spacing: .4em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-top: 1.5rem;
+      opacity: 0;
+      animation: fadeUp .5s .5s ease forwards;
+    }
+
+    .hero-title {
+      position: relative; z-index: 1;
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(4rem, 12vw, 9rem);
+      font-weight: 700;
+      letter-spacing: .08em;
+      line-height: .95;
+      color: var(--white);
+      text-transform: uppercase;
+      margin-top: .4rem;
+      opacity: 0;
+      animation: fadeUp .6s .65s ease forwards;
+    }
+    .hero-title .accent { color: var(--sand); }
+
+    .hero-tagline {
+      position: relative; z-index: 1;
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      font-weight: 300;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 1rem;
+      opacity: 0;
+      animation: fadeUp .5s .8s ease forwards;
+    }
+
+    /* ── DOWNLOAD BLOCK ───────────────────────────────────── */
+    .download-block {
+      position: relative; z-index: 1;
+      margin-top: 3rem;
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+      opacity: 0;
+      animation: fadeUp .6s 1s ease forwards;
+    }
+
+    .btn-download {
+      display: inline-flex; align-items: center; gap: .9rem;
+      padding: 1.1rem 3rem;
+      background: var(--olive);
+      border: 2px solid var(--gold);
+      color: var(--sand);
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: background .2s, color .2s, transform .15s, box-shadow .2s;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    }
+    .btn-download::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(191,187,128,.12) 0%, transparent 50%);
+    }
+    .btn-download:hover {
+      background: var(--gold);
+      color: var(--dark);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(140,127,59,.35);
+    }
+    .btn-download:active { transform: translateY(-1px); }
+
+    .btn-download .dl-icon {
+      width: 22px; height: 22px; flex-shrink: 0;
+      animation: bounce 2s 2s ease-in-out infinite;
+    }
+
+    .download-meta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .73rem;
+      letter-spacing: .15em;
+      color: var(--muted);
+    }
+    .download-meta span { color: var(--gold); }
+
+    /* download counter */
+    .counter-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .4rem 1rem;
+      border: 1px solid rgba(140,127,59,.25);
+      background: rgba(140,127,59,.06);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem;
+      letter-spacing: .12em;
+      color: var(--muted);
+    }
+    .counter-badge .num { color: var(--sand); font-size: .9rem; }
+
+    /* ── SECTION WRAPPER ──────────────────────────────────── */
+    section { position: relative; z-index: 1; }
+
+    .section-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 5rem 5vw;
+    }
+
+    .section-header {
+      display: flex; align-items: center; gap: 1.2rem;
+      margin-bottom: 3rem;
+    }
+    .section-header h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 500;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--sand);
+    }
+    .section-header::after {
+      content: '';
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(140,127,59,.4), transparent);
+    }
+    .section-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .25em;
+      color: var(--gold);
+    }
+
+    /* ── FEATURES GRID ────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 2px;
+    }
+
+    .feature {
+      background: rgba(26,29,15,.8);
+      border: 1px solid rgba(87,101,51,.2);
+      padding: 2rem 1.8rem;
+      position: relative;
+      transition: border-color .25s, background .25s;
+    }
+    .feature:hover {
+      border-color: rgba(140,127,59,.5);
+      background: rgba(87,101,51,.15);
+    }
+    .feature-num {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem;
+      color: var(--gold);
+      letter-spacing: .2em;
+      margin-bottom: .8rem;
+    }
+    .feature h3 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      letter-spacing: .1em;
+      color: var(--light);
+      margin-bottom: .6rem;
+      text-transform: uppercase;
+    }
+    .feature p {
+      font-size: .92rem;
+      line-height: 1.65;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ── ABOUT ────────────────────────────────────────────── */
+    .about-wrap {
+      background: rgba(26,29,15,.5);
+      border-top: 1px solid rgba(87,101,51,.15);
+      border-bottom: 1px solid rgba(87,101,51,.15);
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    .about-label {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: .06em;
+      line-height: 1;
+      text-transform: uppercase;
+      color: var(--white);
+      position: sticky; top: 5rem;
+    }
+    .about-label em { color: var(--sand); font-style: normal; display: block; }
+    .about-body p {
+      font-size: 1.02rem;
+      line-height: 1.85;
+      color: var(--muted);
+      font-weight: 300;
+    }
+    .about-body p + p { margin-top: 1.2rem; }
+    .about-body strong { color: var(--light); font-weight: 600; }
+
+    /* ── INSTALL STEPS ────────────────────────────────────── */
+    .steps {
+      display: flex; flex-direction: column; gap: 0;
+      max-width: 760px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 1.8rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid rgba(87,101,51,.15);
+    }
+    .step:last-child { border: none; }
+
+    .step-n {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .15em;
+      color: var(--gold);
+      padding-top: .2rem;
+    }
+    .step-body h3 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--light);
+      margin-bottom: .45rem;
+    }
+    .step-body p {
+      font-size: .92rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+    code {
+      display: inline-block;
+      background: rgba(87,101,51,.2);
+      border: 1px solid rgba(140,127,59,.25);
+      padding: .1rem .45rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .82rem;
+      color: var(--sand);
+    }
+
+    /* ── SYSREQ TABLE ─────────────────────────────────────── */
+    .sysreq {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2px;
+      margin-top: 1rem;
+    }
+    .req-item {
+      background: rgba(26,29,15,.8);
+      border: 1px solid rgba(87,101,51,.15);
+      padding: 1rem 1.2rem;
+    }
+    .req-item dt {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: .3rem;
+    }
+    .req-item dd {
+      font-size: .9rem;
+      color: var(--light);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid rgba(87,101,51,.15);
+      padding: 2.5rem 5vw;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    footer p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .12em;
+      color: var(--muted);
+    }
+    .version-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .15em;
+      color: var(--gold);
+      border: 1px solid rgba(140,127,59,.3);
+      padding: .25rem .7rem;
+    }
+
+    /* ── SCROLL REVEAL ────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* ── KEYFRAMES ────────────────────────────────────────── */
+    @keyframes dropIn {
+      from { opacity: 0; transform: translateY(-30px) scale(.92); }
+      to   { opacity: 1; transform: none; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: none; }
+    }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(5px); }
+    }
+
+    /* ── FLASH MESSAGE ────────────────────────────────────── */
+    #dl-toast {
+      display: none;
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      z-index: 500;
+      background: var(--olive);
+      border: 1px solid var(--gold);
+      color: var(--sand);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .8rem;
+      letter-spacing: .12em;
+      padding: .8rem 2rem;
+      text-align: center;
+      animation: none;
+    }
+
+    @media (max-width: 680px) {
+      .about-grid { grid-template-columns: 1fr; }
+      .about-label { position: static; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Reconquest logo">
+    <span>Reconquest</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Mecánicas</a></li>
+    <li><a href="#sobre">Sobre</a></li>
+    <li><a href="#instalar">Instalar</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:1.2rem;">
+    {% if user %}
+      <span style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;color:#8C7F3B;">// {{ user['username'] }}</span>
+      {% if user['is_admin'] %}<a href="/admin" style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#BFBB80;text-decoration:none;border:1px solid rgba(140,127,59,.35);padding:.3rem .8rem;">Admin</a>{% endif %}
+      <a href="/logout" style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#6b6a4a;text-decoration:none;">Salir</a>
+    {% else %}
+      <a href="/login"    style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#6b6a4a;text-decoration:none;">Login</a>
+      <a href="/register" style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#BFBB80;text-decoration:none;border:1px solid rgba(140,127,59,.35);padding:.3rem .8rem;">Registro</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="bracket bracket--tl"></div>
+  <div class="bracket bracket--tr"></div>
+  <div class="bracket bracket--bl"></div>
+  <div class="bracket bracket--br"></div>
+
+  <img class="hero-logo"
+       src="{{ url_for('static', filename='img/logo.png') }}"
+       alt="Reconquest">
+
+  <p class="hero-eyebrow">Portugal · 1974 · Ucronía histórica</p>
+
+  <h1 class="hero-title">
+    <span class="accent">Re</span>conquest
+  </h1>
+
+  <p class="hero-tagline">Estrategia en tiempo real &nbsp;·&nbsp; La revolución fracasó</p>
+
+  <div class="download-block">
+    {% if installer_exists %}
+    <a href="{{ url_for('download') if user else url_for('login', next='/download') }}" class="btn-download" id="dl-btn">
+      <svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="square">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Descargar Ahora
+    </a>
+    <p class="download-meta">
+      v{{ version }} &nbsp;·&nbsp; Windows 64-bit
+      {% if installer_size %}&nbsp;·&nbsp; <span>{{ installer_size }} MB</span>{% endif %}
+    </p>
+    {% else %}
+    <div style="padding:1.2rem 2.5rem; border:1px solid rgba(140,127,59,.3);
+                font-family:'Share Tech Mono',monospace; font-size:.82rem;
+                letter-spacing:.15em; color:var(--muted); text-align:center;">
+      PRÓXIMAMENTE &nbsp;//&nbsp; INSTALADOR EN PREPARACIÓN
+    </div>
+    {% endif %}
+    <div class="counter-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span class="num">{{ downloads }}</span> descargas totales
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <span class="section-tag">// 01</span>
+      <h2>Mecánicas de juego</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature reveal">
+        <p class="feature-num">[ 01 ]</p>
+        <h3>Conquista de Fábricas</h3>
+        <p>Sin recolección pasiva. Captura nodos industriales distribuidos por el mapa para financiar tropas y construir defensas.</p>
+      </div>
+      <div class="feature reveal">
+        <p class="feature-num">[ 02 ]</p>
+        <h3>Gestión de Tropas</h3>
+        <p>Spawnea y organiza unidades. Equilibra capacidades ofensivas y defensivas para avanzar sobre el terreno enemigo.</p>
+      </div>
+      <div class="feature reveal">
+        <p class="feature-num">[ 03 ]</p>
+        <h3>Control de Sectores</h3>
+        <p>Domina cada sector hasta alcanzar el mapa completo. La victoria llega con la destrucción de la base enemiga principal.</p>
+      </div>
+      <div class="feature reveal">
+        <p class="feature-num">[ 04 ]</p>
+        <h3>IA & Pathfinding</h3>
+        <p>Ciclo de simulación optimizado que gestiona en tiempo real la IA de las unidades y su navegación por el campo de batalla.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<div class="about-wrap" id="sobre">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div>
+        <h2 class="about-label reveal">El <em>Proyecto</em></h2>
+      </div>
+      <div class="about-body reveal">
+        <p>
+          <strong>Reconquest</strong> es un videojuego de estrategia en tiempo real (RTS)
+          desarrollado con <strong>Unity</strong> y <strong>C#</strong> como Trabajo de Fin de Grado.
+        </p>
+        <p>
+          El juego se sitúa en una <strong>ucronía histórica en Portugal</strong>, donde el fracaso de la
+          Revolución de los Claveles de 1974 desencadena una guerra civil ficticia. El jugador
+          asume el mando de una facción en conflicto por el control del territorio.
+        </p>
+        <p>
+          La arquitectura se sustenta en tres subsistemas: <strong>gestión de entidades</strong>
+          (unidades), <strong>control de recursos</strong> mediante conquista de fábricas, y
+          un <strong>sistema de captura de sectores</strong> que determina el avance estratégico.
+        </p>
+        <p>
+          La economía rompe con la recolección pasiva clásica: el flujo de recursos depende
+          íntegramente de la <strong>conquista y mantenimiento de nodos industriales</strong>,
+          creando un ciclo de combate continuo y dinámico.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALL -->
+<section id="instalar">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <span class="section-tag">// 03</span>
+      <h2>Instalación</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-n">PASO<br>01</div>
+        <div class="step-body">
+          <h3>Descarga el instalador</h3>
+          <p>Haz clic en <strong>"Descargar Ahora"</strong> en la parte superior.
+             Se descargará directamente el instalador <code>Reconquest_Setup_v{{ version }}.exe</code>.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-n">PASO<br>02</div>
+        <div class="step-body">
+          <h3>Ejecuta el instalador</h3>
+          <p>Abre el <code>.exe</code> descargado. Si aparece el aviso de Windows SmartScreen,
+             haz clic en <strong>"Más información" → "Ejecutar de todas formas"</strong>.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-n">PASO<br>03</div>
+        <div class="step-body">
+          <h3>Sigue el asistente</h3>
+          <p>El instalador copiará todos los archivos necesarios en la carpeta de tu elección
+             y creará un acceso directo en el escritorio.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-n">PASO<br>04</div>
+        <div class="step-body">
+          <h3>Requisitos del sistema</h3>
+          <dl class="sysreq">
+            <div class="req-item">
+              <dt>Sistema Operativo</dt>
+              <dd>Windows 10 / 11 (64-bit)</dd>
+            </div>
+            <div class="req-item">
+              <dt>Memoria RAM</dt>
+              <dd>4 GB mínimo</dd>
+            </div>
+            <div class="req-item">
+              <dt>Tarjeta gráfica</dt>
+              <dd>DirectX 11 compatible</dd>
+            </div>
+            <div class="req-item">
+              <dt>Almacenamiento</dt>
+              <dd>~500 MB libres</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- VIDEO -->
+<section id="video" style="position:relative;z-index:1;">
+  <div style="max-width:1080px;margin:0 auto;padding:5rem 5vw;">
+
+    <div style="display:flex;align-items:center;gap:1.2rem;margin-bottom:2.5rem;" class="reveal">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;color:#8C7F3B;">// 03</span>
+      <h2 style="font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#BFBB80;">Gameplay</h2>
+      <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(140,127,59,.4),transparent);"></div>
+    </div>
+
+    <div class="reveal" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
+         border:1px solid rgba(140,127,59,.25);box-shadow:0 0 40px rgba(87,101,51,.2);">
+      <iframe
+        src="https://www.youtube.com/embed/yGos8TwokgE?rel=0&modestbranding=1&color=white"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        title="Reconquest — Gameplay">
+      </iframe>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- FAQ -->
+<section id="faq" style="position:relative;z-index:1;">
+  <div style="max-width:800px;margin:0 auto;padding:5rem 5vw;">
+
+    <div style="display:flex;align-items:center;gap:1.2rem;margin-bottom:2.5rem;" class="reveal">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;color:#8C7F3B;">// 05</span>
+      <h2 style="font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#BFBB80;">Preguntas frecuentes</h2>
+      <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(140,127,59,.4),transparent);"></div>
+    </div>
+
+    <div class="faq-list">
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          ¿Es gratuito?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Sí, Reconquest es completamente gratuito. Solo necesitas crear una cuenta para descargarlo.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          ¿En qué plataformas está disponible?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Actualmente solo está disponible para <strong>Windows 10 / 11 (64-bit)</strong>. No hay versiones para Mac o Linux de momento.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          ¿Qué requisitos mínimos necesito?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>4 GB de RAM, tarjeta gráfica compatible con DirectX 11 y unos 500 MB de espacio libre en disco. No necesitas una PC de gama alta para jugarlo.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Windows me dice que el archivo no es seguro, ¿es un virus?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>No. El aviso aparece porque el instalador no tiene una firma digital de código (que es de pago). Es un falso positivo muy común en juegos indie. Haz clic en <strong>"Más información" → "Ejecutar de todas formas"</strong> para instalarlo sin problemas.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          ¿El juego tiene multijugador?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>No, Reconquest es un juego de un solo jugador. Te enfrentas a una IA que controla las fuerzas enemigas en el mapa.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          ¿Habrá actualizaciones?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>El juego ha sido desarrollado como Trabajo de Fin de Grado. Puede haber correcciones de errores, pero no está planificado un desarrollo continuado a largo plazo.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          ¿Cómo puedo reportar un bug?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Puedes dejarlo en la sección de reseñas describiendo el problema, o contactar directamente con el desarrollador.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq-item {
+    border-bottom:1px solid rgba(87,101,51,.15);
+  }
+  .faq-q {
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    padding:1.2rem 0;
+    background:none; border:none; cursor:crosshair;
+    font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:400;
+    letter-spacing:.06em; color:#d4d09e; text-align:left;
+    transition:color .2s;
+  }
+  .faq-q:hover { color:#BFBB80; }
+  .faq-icon {
+    font-family:'Share Tech Mono',monospace; font-size:1.3rem;
+    color:#8C7F3B; transition:transform .25s; flex-shrink:0; margin-left:1rem;
+  }
+  .faq-a {
+    max-height:0; overflow:hidden; transition:max-height .35s ease, padding .3s;
+    padding:0;
+  }
+  .faq-a p {
+    font-size:.95rem; line-height:1.75; color:#6b6a4a;
+    font-weight:300; padding-bottom:1.2rem;
+  }
+  .faq-a strong { color:#a09e7a; }
+  .faq-item.open .faq-a { max-height:200px; }
+  .faq-item.open .faq-icon { transform:rotate(45deg); }
+  .faq-item.open .faq-q { color:#BFBB80; }
+</style>
+
+<!-- REVIEWS -->
+<section id="resenas" style="position:relative;z-index:1;background:rgba(10,12,8,.5);border-top:1px solid rgba(87,101,51,.12);">
+  <div style="max-width:1080px;margin:0 auto;padding:5rem 5vw;">
+
+    <!-- Header row -->
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:3rem;" class="reveal">
+      <div>
+        <p style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;color:#8C7F3B;margin-bottom:.6rem;">// 04 &nbsp; Reseñas</p>
+        <h2 style="font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BFBB80;">Lo que dice la comunidad</h2>
+      </div>
+      {% if avg_rating %}
+      <div style="text-align:right;">
+        <div style="font-family:'Oswald',sans-serif;font-size:3rem;font-weight:700;color:#BFBB80;line-height:1;">{{ avg_rating }}</div>
+        <div style="font-size:1.2rem;letter-spacing:.1em;color:#8C7F3B;">
+          {% for i in range(1,6) %}{% if i <= avg_rating|int %}★{% elif (avg_rating - avg_rating|int) >= 0.5 and i == avg_rating|int + 1 %}★{% else %}☆{% endif %}{% endfor %}
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.15em;color:#6b6a4a;margin-top:.2rem;">{{ reviews|length }} reseña{{ 's' if reviews|length != 1 else '' }}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Reviews grid -->
+    {% if reviews %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px;margin-bottom:3.5rem;">
+      {% for r in reviews %}
+      <div class="reveal" style="background:rgba(26,29,15,.85);border:1px solid rgba(87,101,51,.18);padding:1.8rem;position:relative;transition:border-color .25s;">
+        <!-- Stars -->
+        <div style="font-size:1rem;color:#8C7F3B;letter-spacing:.1em;margin-bottom:.8rem;">
+          {% for i in range(1,6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#6b6a4a;margin-left:.5rem;">{{ r.rating }}/5</span>
+        </div>
+        <!-- Body -->
+        <p style="font-size:.95rem;line-height:1.7;color:#a09e7a;font-weight:300;margin-bottom:1.2rem;">"{{ r.body }}"</p>
+        <!-- Meta -->
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(87,101,51,.12);padding-top:.8rem;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:#8C7F3B;letter-spacing:.1em;">// {{ r.username }}</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#6b6a4a;">{{ r.created_at[:10] }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="reveal" style="border:1px solid rgba(87,101,51,.15);padding:2.5rem;text-align:center;margin-bottom:3rem;background:rgba(26,29,15,.5);">
+      <p style="font-family:'Share Tech Mono',monospace;font-size:.8rem;letter-spacing:.15em;color:#6b6a4a;">// Sin reseñas todavía. Sé el primero.</p>
+    </div>
+    {% endif %}
+
+    <!-- Write review form -->
+    <div class="reveal" style="max-width:640px;">
+      <p style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.2em;color:#8C7F3B;margin-bottom:1.2rem;">// Dejar una reseña</p>
+
+      {% if not user %}
+      <div style="background:rgba(87,101,51,.1);border:1px solid rgba(87,101,51,.25);padding:1.2rem 1.5rem;
+                  font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.1em;color:#6b6a4a;line-height:1.8;">
+        Debes <a href="/login?next=/#resenas" style="color:#BFBB80;text-decoration:none;">iniciar sesión</a>
+        para dejar una reseña.
+      </div>
+
+      {% elif user_reviewed %}
+      <div style="background:rgba(87,101,51,.12);border:1px solid rgba(87,101,51,.25);padding:1.2rem 1.5rem;
+                  font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.1em;color:#8C7F3B;line-height:1.8;">
+        ✓ Ya has enviado tu reseña. Será visible una vez aprobada.
+      </div>
+
+      {% else %}
+      <form method="POST" action="/reviews/submit">
+        <!-- Star picker -->
+        <div style="margin-bottom:1.2rem;">
+          <label style="font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#8C7F3B;display:block;margin-bottom:.6rem;">Puntuación</label>
+          <div class="star-picker" style="display:flex;gap:.4rem;flex-direction:row-reverse;justify-content:flex-end;">
+            {% for i in [5,4,3,2,1] %}
+            <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}"
+                   style="display:none;" {% if i==5 %}required{% endif %}>
+            <label for="star{{ i }}"
+                   style="font-size:1.8rem;color:#3a3d28;cursor:crosshair;transition:color .15s;line-height:1;"
+                   onmouseover="highlightStars({{ i }})" onmouseout="resetStars()">★</label>
+            {% endfor %}
+          </div>
+        </div>
+        <!-- Text -->
+        <div style="margin-bottom:1.2rem;">
+          <label style="font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#8C7F3B;display:block;margin-bottom:.6rem;">Comentario <span style="color:#6b6a4a;font-size:.62rem;">(10–800 caracteres)</span></label>
+          <textarea name="body" rows="4" maxlength="800" placeholder="Escribe tu opinión sobre el juego..."
+                    style="width:100%;padding:.8rem 1rem;background:rgba(10,11,7,.8);border:1px solid rgba(140,127,59,.25);
+                           color:#d4d09e;font-family:'Rajdhani',sans-serif;font-size:.95rem;resize:vertical;
+                           outline:none;cursor:text;line-height:1.6;" required minlength="10"></textarea>
+          <div style="text-align:right;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#6b6a4a;margin-top:.3rem;">
+            <span id="char-count">0</span>/800
+          </div>
+        </div>
+        <button type="submit"
+                style="padding:.85rem 2.5rem;background:#576533;border:2px solid #8C7F3B;color:#BFBB80;
+                       font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.12em;
+                       text-transform:uppercase;cursor:crosshair;transition:background .2s,color .2s;
+                       clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));">
+          Enviar Reseña
+        </button>
+      </form>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 · Reconquest · Trabajo de Fin de Grado · Todos los derechos reservados</p>
+  <span class="version-tag">v{{ version }}</span>
+</footer>
+
+<!-- TOAST -->
+<div id="dl-toast">⬇ Descarga iniciada — ¡Suerte, Comandante!</div>
+
+<script>
+  // Scroll reveal
+  const els = document.querySelectorAll('.reveal');
+  const io  = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('in'), i * 70);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(el => io.observe(el));
+
+  // FAQ accordion
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // Star picker
+  const starLabels = document.querySelectorAll('.star-picker label');
+  let selectedRating = 0;
+  function highlightStars(n) {
+    starLabels.forEach((lbl, i) => {
+      // labels are in reverse order (5,4,3,2,1)
+      const val = 5 - i;
+      lbl.style.color = val <= n ? '#8C7F3B' : '#3a3d28';
+    });
+  }
+  function resetStars() {
+    starLabels.forEach((lbl, i) => {
+      const val = 5 - i;
+      lbl.style.color = val <= selectedRating ? '#BFBB80' : '#3a3d28';
+    });
+  }
+  document.querySelectorAll('.star-picker input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      selectedRating = parseInt(inp.value);
+      resetStars();
+    });
+  });
+
+  // Char counter
+  const textarea = document.querySelector('textarea[name="body"]');
+  const counter  = document.getElementById('char-count');
+  if (textarea && counter) {
+    textarea.addEventListener('input', () => { counter.textContent = textarea.value.length; });
+  }
+
+  // Download toast
+  const btn = document.getElementById('dl-btn');
+  const toast = document.getElementById('dl-toast');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Recuperar contraseña — Reconquest{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Reconquest">
+    </div>
+    <h1 class="auth-title">Recuperar</h1>
+    <p class="auth-sub">// Restablece el acceso</p>
+
+    {% if not sent %}
+    <p style="font-size:.9rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6;">
+      Introduce tu email y recibirás un enlace para restablecer la contraseña.
+    </p>
+    <form method="POST">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="correo@dominio.com" required autofocus>
+      </div>
+      <button type="submit" class="btn-submit">Enviar enlace</button>
+    </form>
+    {% else %}
+    <div style="background:rgba(87,101,51,.2);border:1px solid var(--olive);padding:1.2rem;margin-bottom:1.5rem;
+                font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.08em;color:var(--sand);line-height:1.7;">
+      ✓ Si ese email está registrado, recibirás un enlace en breve.<br>
+      Revisa también la carpeta de spam.
+    </div>
+
+    {% if dev_token %}
+    <div style="background:rgba(140,127,59,.1);border:1px solid rgba(140,127,59,.3);padding:1rem;
+                font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--muted);line-height:1.8;margin-bottom:1.2rem;">
+      <span style="color:var(--gold)">// MODO DEV — SMTP no configurado</span><br>
+      Usa este enlace para resetear:<br>
+      <a href="{{ url_for('reset', token=dev_token) }}" style="color:var(--sand);word-break:break-all;">
+        /reset/{{ dev_token }}
+      </a>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div class="auth-links">
+      <a href="{{ url_for('login') }}">← Volver al login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

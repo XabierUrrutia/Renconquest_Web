@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Moderar Reseñas — Reconquest{% endblock %}
+{% block version %}{% endblock %}
+
+{% block head %}
+<style>
+  .rev-wrap { max-width:1000px; margin:0 auto; padding:2rem 5vw 5rem; }
+  .rev-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:2.5rem; flex-wrap:wrap; gap:1rem;
+  }
+  .rev-header h1 {
+    font-family:'Oswald',sans-serif; font-size:2rem; font-weight:700;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--white);
+  }
+  .rev-header h1 span { color:var(--sand); }
+  .back-link {
+    font-family:'Share Tech Mono',monospace; font-size:.72rem;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); text-decoration:none; transition:color .2s;
+  }
+  .back-link:hover { color:var(--sand); }
+
+  .sec-title {
+    font-family:'Oswald',sans-serif; font-size:1rem; font-weight:500;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--sand);
+    display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem;
+  }
+  .sec-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(140,127,59,.3),transparent); }
+  .sec-tag { font-family:'Share Tech Mono',monospace; font-size:.66rem; letter-spacing:.2em; color:var(--gold); }
+
+  .rev-card {
+    background:rgba(26,29,15,.85);
+    border:1px solid rgba(87,101,51,.2);
+    padding:1.6rem; margin-bottom:2px;
+    display:grid; grid-template-columns:1fr auto;
+    gap:1rem; align-items:start;
+  }
+  .rev-card:hover { background:rgba(87,101,51,.1); }
+
+  .rev-stars { font-size:1rem; color:var(--gold); letter-spacing:.08em; }
+  .rev-meta {
+    font-family:'Share Tech Mono',monospace; font-size:.68rem;
+    letter-spacing:.12em; color:var(--muted); margin:.4rem 0 .8rem;
+  }
+  .rev-meta span { color:var(--gold); }
+  .rev-body { font-size:.92rem; line-height:1.7; color:#a09e7a; font-weight:300; }
+
+  .rev-actions { display:flex; flex-direction:column; gap:.4rem; align-items:flex-end; }
+  .btn-rev {
+    padding:.3rem .9rem;
+    font-family:'Share Tech Mono',monospace; font-size:.65rem;
+    letter-spacing:.1em; text-transform:uppercase;
+    border:1px solid; background:none; cursor:crosshair; transition:background .15s; white-space:nowrap;
+  }
+  .btn-approve { color:#7ab87a; border-color:rgba(122,184,122,.3); }
+  .btn-approve:hover { background:rgba(122,184,122,.1); }
+  .btn-del { color:#b07070; border-color:rgba(160,112,112,.3); }
+  .btn-del:hover { background:rgba(160,112,112,.1); }
+
+  .empty-msg {
+    padding:2rem; text-align:center;
+    font-family:'Share Tech Mono',monospace; font-size:.75rem;
+    letter-spacing:.15em; color:var(--muted);
+    border:1px solid rgba(87,101,51,.12); margin-bottom:2rem;
+  }
+  .badge-pending { display:inline-block; padding:.15rem .5rem; background:rgba(200,185,106,.1); border:1px solid rgba(200,185,106,.3); color:#c8b96a; font-family:'Share Tech Mono',monospace; font-size:.62rem; letter-spacing:.12em; margin-left:.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rev-wrap">
+
+  <div class="rev-header">
+    <h1>Moderar <span>Reseñas</span></h1>
+    <a href="{{ url_for('admin_dashboard') }}" class="back-link">← Panel admin</a>
+  </div>
+
+  <!-- PENDING -->
+  <p class="sec-title">
+    <span class="sec-tag">// 01</span>
+    Pendientes de aprobación
+    {% if pending %}<span class="badge-pending">{{ pending|length }}</span>{% endif %}
+  </p>
+
+  {% if pending %}
+    {% for r in pending %}
+    <div class="rev-card">
+      <div>
+        <div class="rev-stars">
+          {% for i in range(1,6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);margin-left:.4rem;">{{ r.rating }}/5</span>
+        </div>
+        <div class="rev-meta">
+          <span>// {{ r.username }}</span> &nbsp;·&nbsp; {{ r.created_at[:10] }}
+        </div>
+        <p class="rev-body">{{ r.body }}</p>
+      </div>
+      <div class="rev-actions">
+        <form method="POST" action="/admin/reviews/{{ r.id }}/approve">
+          <button class="btn-rev btn-approve">✓ Aprobar</button>
+        </form>
+        <form method="POST" action="/admin/reviews/{{ r.id }}/delete"
+              onsubmit="return confirm('¿Eliminar esta reseña?')">
+          <button class="btn-rev btn-del">✕ Eliminar</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-msg">// No hay reseñas pendientes</div>
+  {% endif %}
+
+  <!-- APPROVED -->
+  <p class="sec-title" style="margin-top:2.5rem;">
+    <span class="sec-tag">// 02</span>
+    Aprobadas ({{ approved|length }})
+  </p>
+
+  {% if approved %}
+    {% for r in approved %}
+    <div class="rev-card" style="border-color:rgba(87,101,51,.12);">
+      <div>
+        <div class="rev-stars" style="color:var(--muted);">
+          {% for i in range(1,6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);margin-left:.4rem;">{{ r.rating }}/5</span>
+        </div>
+        <div class="rev-meta"><span>// {{ r.username }}</span> &nbsp;·&nbsp; {{ r.created_at[:10] }}</div>
+        <p class="rev-body">{{ r.body }}</p>
+      </div>
+      <div class="rev-actions">
+        <form method="POST" action="/admin/reviews/{{ r.id }}/delete"
+              onsubmit="return confirm('¿Eliminar esta reseña?')">
+          <button class="btn-rev btn-del">✕ Eliminar</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-msg">// Ninguna reseña aprobada todavía</div>
+  {% endif %}
+
+</div>
+{% endblock %}
