@@ -28,13 +28,6 @@ SITE_URL   = os.environ.get("SITE_URL",   "http://localhost:5000")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 
-# ── Stats en memoria (descarga) ───────────────────────────────────────────────
-# Con PostgreSQL los conteos se obtienen directamente de la BD
-def get_total_downloads(db):
-    row = db.execute("SELECT COUNT(*) FROM download_log").fetchone()
-    return row[0] if row else 0
-
-
 # ── Database ──────────────────────────────────────────────────────────────────
 def get_db():
     if "db" not in g:
@@ -204,8 +197,6 @@ def index():
         user_reviewed = bool(db_fetchone(
             "SELECT id FROM reviews WHERE user_id=%s", (user["id"],)
         ))
-    total_downloads = get_total_downloads(type('obj', (object,), {'execute': lambda self, q: db_fetchone(q)})())
-    # Obtener descargas directamente
     dl_row = db_fetchone("SELECT COUNT(*) as cnt FROM download_log")
     total_downloads = dl_row["cnt"] if dl_row else 0
 
