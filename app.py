@@ -1,10 +1,12 @@
-import os, json, sqlite3, hashlib, secrets, smtplib, logging
+import os, json, hashlib, secrets, smtplib, logging
 import urllib.request, urllib.error
 from datetime import datetime, timedelta
 from functools import wraps
 from email.mime.text import MIMEText
 from flask import (Flask, render_template, send_file, jsonify, abort,
                    request, redirect, url_for, session, flash, g)
+import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
@@ -14,8 +16,6 @@ logging.basicConfig(level=logging.INFO)
 GAME_VERSION   = "1.0.0"
 INSTALLER_NAME = "Reconquest_Setup_v1.0.0.exe"
 INSTALLER_URL  = "https://github.com/XabierUrrutia/Renconquest_Web/releases/download/v1.0.0/Reconquest_Setup_v1.0.0.exe"
-STATS_FILE     = os.path.join(os.path.dirname(__file__), "data", "stats.json")
-DB_PATH        = os.path.join(os.path.dirname(__file__), "data", "reconquest.db")
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
@@ -25,29 +25,58 @@ SMTP_USER  = os.environ.get("SMTP_USER",  "")
 SMTP_PASS  = os.environ.get("SMTP_PASS",  "")
 SITE_URL   = os.environ.get("SITE_URL",   "http://localhost:5000")
 
-os.makedirs(os.path.dirname(DB_PATH),    exist_ok=True)
-os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
+
+# ── Stats en memoria (descarga) ───────────────────────────────────────────────
+# Con PostgreSQL los conteos se obtienen directamente de la BD
+def get_total_downloads(db):
+    row = db.execute("SELECT COUNT(*) FROM download_log").fetchone()
+    return row[0] if row else 0
 
 
 # ── Database ──────────────────────────────────────────────────────────────────
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA journal_mode=WAL")
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.autocommit = False
+        g.db = conn
     return g.db
+
+def db_execute(query, params=()):
+    """Ejecuta una query y devuelve el cursor."""
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    # Convertir placeholders ? de SQLite a %s de PostgreSQL
+    query = query.replace("?", "%s")
+    cur.execute(query, params)
+    return cur
+
+def db_fetchone(query, params=()):
+    cur = db_execute(query, params)
+    return cur.fetchone()
+
+def db_fetchall(query, params=()):
+    cur = db_execute(query, params)
+    return cur.fetchall()
+
+def db_commit():
+    get_db().commit()
 
 @app.teardown_appcontext
 def close_db(exc):
     db = g.pop("db", None)
-    if db: db.close()
+    if db:
+        if exc:
+            db.rollback()
+        db.close()
 
 def init_db():
-    db = sqlite3.connect(DB_PATH)
-    db.row_factory = sqlite3.Row
-    db.executescript("""
+    conn = psycopg2.connect(DATABASE_URL)
+    cur  = conn.cursor()
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            id          SERIAL PRIMARY KEY,
             username    TEXT    NOT NULL UNIQUE,
             email       TEXT    NOT NULL UNIQUE,
             password    TEXT    NOT NULL,
@@ -59,27 +88,27 @@ def init_db():
             avatar_url  TEXT
         );
         CREATE TABLE IF NOT EXISTS reset_tokens (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            id         SERIAL PRIMARY KEY,
             user_id    INTEGER NOT NULL,
             token      TEXT    NOT NULL UNIQUE,
             expires_at TEXT    NOT NULL,
             used       INTEGER NOT NULL DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS download_log (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            id         SERIAL PRIMARY KEY,
             user_id    INTEGER,
             ip         TEXT,
             user_agent TEXT,
             ts         TEXT    NOT NULL
         );
         CREATE TABLE IF NOT EXISTS bug_reports (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            id          SERIAL PRIMARY KEY,
             user_id     INTEGER,
             description TEXT    NOT NULL,
             created_at  TEXT    NOT NULL
         );
         CREATE TABLE IF NOT EXISTS reviews (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            id         SERIAL PRIMARY KEY,
             user_id    INTEGER NOT NULL,
             rating     INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
             body       TEXT    NOT NULL,
@@ -87,16 +116,16 @@ def init_db():
             created_at TEXT    NOT NULL
         );
     """)
-    row = db.execute("SELECT id FROM users WHERE is_admin=1").fetchone()
-    if not row:
+    cur.execute("SELECT id FROM users WHERE is_admin=1 LIMIT 1")
+    if not cur.fetchone():
         salt = secrets.token_hex(16)
         pwd  = _hash_pwd("admin1234", salt)
-        db.execute(
-            "INSERT INTO users (username,email,password,salt,is_admin,created_at) VALUES (?,?,?,?,1,?)",
+        cur.execute(
+            "INSERT INTO users (username,email,password,salt,is_admin,created_at) VALUES (%s,%s,%s,%s,1,%s)",
             ("admin", "admin@reconquest.local", pwd, salt, _now())
         )
-    db.commit()
-    db.close()
+    conn.commit()
+    conn.close()
 
 def _now():
     return datetime.utcnow().isoformat()
@@ -126,20 +155,8 @@ def admin_required(f):
 
 def current_user():
     if "user_id" in session:
-        return get_db().execute("SELECT * FROM users WHERE id=?", (session["user_id"],)).fetchone()
+        return db_fetchone("SELECT * FROM users WHERE id=%s", (session["user_id"],))
     return None
-
-
-# ── Stats ─────────────────────────────────────────────────────────────────────
-def load_stats():
-    if os.path.exists(STATS_FILE):
-        with open(STATS_FILE) as f:
-            return json.load(f)
-    return {"total_downloads": 0}
-
-def save_stats(s):
-    with open(STATS_FILE, "w") as f:
-        json.dump(s, f, indent=2)
 
 
 # ── Email ─────────────────────────────────────────────────────────────────────
@@ -173,25 +190,28 @@ def send_reset_email(to_email, token):
 
 @app.route("/")
 def index():
-    stats = load_stats()
-    db = get_db()
-    reviews = db.execute(
+    reviews = db_fetchall(
         """SELECT r.rating, r.body, r.created_at, u.username
            FROM reviews r JOIN users u ON r.user_id=u.id
            WHERE r.approved=1 ORDER BY r.created_at DESC"""
-    ).fetchall()
+    )
     avg_rating = None
     if reviews:
         avg_rating = round(sum(r["rating"] for r in reviews) / len(reviews), 1)
     user = current_user()
     user_reviewed = False
     if user:
-        user_reviewed = bool(db.execute(
-            "SELECT id FROM reviews WHERE user_id=?", (user["id"],)
-        ).fetchone())
+        user_reviewed = bool(db_fetchone(
+            "SELECT id FROM reviews WHERE user_id=%s", (user["id"],)
+        ))
+    total_downloads = get_total_downloads(type('obj', (object,), {'execute': lambda self, q: db_fetchone(q)})())
+    # Obtener descargas directamente
+    dl_row = db_fetchone("SELECT COUNT(*) as cnt FROM download_log")
+    total_downloads = dl_row["cnt"] if dl_row else 0
+
     return render_template("index.html",
         version=GAME_VERSION,
-        downloads=stats["total_downloads"],
+        downloads=total_downloads,
         installer_exists=True,
         installer_size=None,
         user=user,
@@ -203,15 +223,11 @@ def index():
 @app.route("/download")
 @login_required
 def download():
-    db = get_db()
-    db.execute(
+    db_execute(
         "INSERT INTO download_log (user_id,ip,user_agent,ts) VALUES (?,?,?,?)",
         (session["user_id"], request.remote_addr, request.user_agent.string[:120], _now())
     )
-    db.commit()
-    stats = load_stats()
-    stats["total_downloads"] = stats.get("total_downloads", 0) + 1
-    save_stats(stats)
+    db_commit()
     return redirect(INSTALLER_URL)
 
 @app.route("/register", methods=["GET","POST"])
@@ -231,18 +247,17 @@ def register():
         elif password != confirm:
             error = "Las contraseñas no coinciden."
         else:
-            db  = get_db()
-            dup = db.execute("SELECT id FROM users WHERE username=? OR email=?",
-                             (username, email)).fetchone()
+            dup = db_fetchone("SELECT id FROM users WHERE username=%s OR email=%s",
+                              (username, email))
             if dup:
                 error = "El nombre de usuario o email ya está registrado."
             else:
                 salt = secrets.token_hex(16)
-                db.execute(
+                db_execute(
                     "INSERT INTO users (username,email,password,salt,created_at) VALUES (?,?,?,?,?)",
                     (username, email, _hash_pwd(password, salt), salt, _now())
                 )
-                db.commit()
+                db_commit()
                 flash("Cuenta creada. Ya puedes iniciar sesión.", "success")
                 return redirect(url_for("login"))
     return render_template("register.html", error=error)
@@ -255,11 +270,10 @@ def login():
     if request.method == "POST":
         ident    = request.form.get("identifier","").strip()
         password = request.form.get("password","")
-        db   = get_db()
-        user = db.execute(
-            "SELECT * FROM users WHERE (username=? OR email=?) AND is_active=1",
+        user = db_fetchone(
+            "SELECT * FROM users WHERE (username=%s OR email=%s) AND is_active=1",
             (ident, ident.lower())
-        ).fetchone()
+        )
         if not user or _hash_pwd(password, user["salt"]) != user["password"]:
             error = "Credenciales incorrectas."
         else:
@@ -268,8 +282,8 @@ def login():
             session["user_id"]  = user["id"]
             session["username"] = user["username"]
             session["is_admin"] = bool(user["is_admin"])
-            db.execute("UPDATE users SET last_login=? WHERE id=?", (_now(), user["id"]))
-            db.commit()
+            db_execute("UPDATE users SET last_login=%s WHERE id=%s", (_now(), user["id"]))
+            db_commit()
             return redirect(request.args.get("next", url_for("index")))
     return render_template("login.html", error=error)
 
@@ -284,26 +298,24 @@ def forgot():
     dev_token = None
     if request.method == "POST":
         email = request.form.get("email","").strip().lower()
-        db    = get_db()
-        user  = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        user  = db_fetchone("SELECT * FROM users WHERE email=%s", (email,))
         if user:
             token = secrets.token_urlsafe(32)
             exp   = (datetime.utcnow() + timedelta(hours=1)).isoformat()
-            db.execute("INSERT INTO reset_tokens (user_id,token,expires_at) VALUES (?,?,?)",
+            db_execute("INSERT INTO reset_tokens (user_id,token,expires_at) VALUES (?,?,?)",
                        (user["id"], token, exp))
-            db.commit()
+            db_commit()
             ok = send_reset_email(email, token)
             if not ok:
-                dev_token = token   # display link when SMTP not configured
+                dev_token = token
         sent = True
     return render_template("forgot.html", sent=sent, dev_token=dev_token)
 
 @app.route("/reset/<token>", methods=["GET","POST"])
 def reset(token):
-    db  = get_db()
-    row = db.execute(
-        "SELECT * FROM reset_tokens WHERE token=? AND used=0", (token,)
-    ).fetchone()
+    row = db_fetchone(
+        "SELECT * FROM reset_tokens WHERE token=%s AND used=0", (token,)
+    )
     invalid = not row or row["expires_at"] < _now()
     error   = None
     if not invalid and request.method == "POST":
@@ -315,10 +327,10 @@ def reset(token):
             error = "Las contraseñas no coinciden."
         else:
             salt = secrets.token_hex(16)
-            db.execute("UPDATE users SET password=?,salt=? WHERE id=?",
+            db_execute("UPDATE users SET password=%s,salt=%s WHERE id=%s",
                        (_hash_pwd(pwd, salt), salt, row["user_id"]))
-            db.execute("UPDATE reset_tokens SET used=1 WHERE token=?", (token,))
-            db.commit()
+            db_execute("UPDATE reset_tokens SET used=1 WHERE token=%s", (token,))
+            db_commit()
             flash("Contraseña actualizada.", "success")
             return redirect(url_for("login"))
     return render_template("reset.html", invalid=invalid, token=token, error=error)
@@ -331,26 +343,27 @@ def reset(token):
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
-    db    = get_db()
-    users = db.execute(
+    users = db_fetchall(
         "SELECT id,username,email,is_admin,is_active,created_at,last_login FROM users ORDER BY created_at DESC"
-    ).fetchall()
-    recent_dls = db.execute(
+    )
+    recent_dls = db_fetchall(
         """SELECT d.ts, d.ip, u.username
            FROM download_log d LEFT JOIN users u ON d.user_id=u.id
            ORDER BY d.ts DESC LIMIT 25"""
-    ).fetchall()
-    stats = load_stats()
-    bug_reports = db.execute(
+    )
+    bug_reports = db_fetchall(
         """SELECT b.id, b.description, b.created_at, u.username
            FROM bug_reports b LEFT JOIN users u ON b.user_id=u.id
            ORDER BY b.created_at DESC"""
-    ).fetchall()
+    )
+    dl_row = db_fetchone("SELECT COUNT(*) as cnt FROM download_log")
+    total_downloads = dl_row["cnt"] if dl_row else 0
+
     return render_template("admin.html",
         users=users,
         total_users=len(users),
         active_users=sum(1 for u in users if u["is_active"]),
-        total_downloads=stats.get("total_downloads",0),
+        total_downloads=total_downloads,
         recent_dls=recent_dls,
         version=GAME_VERSION,
         bug_reports=bug_reports,
@@ -362,8 +375,8 @@ def admin_toggle(uid):
     if uid == session["user_id"]:
         flash("No puedes desactivarte a ti mismo.", "error")
     else:
-        get_db().execute("UPDATE users SET is_active = 1 - is_active WHERE id=?", (uid,))
-        get_db().commit()
+        db_execute("UPDATE users SET is_active = 1 - is_active WHERE id=%s", (uid,))
+        db_commit()
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/user/<int:uid>/delete", methods=["POST"])
@@ -372,28 +385,29 @@ def admin_delete(uid):
     if uid == session["user_id"]:
         flash("No puedes eliminarte a ti mismo.", "error")
     else:
-        db = get_db()
-        db.execute("DELETE FROM users WHERE id=?", (uid,))
-        db.execute("DELETE FROM reset_tokens WHERE user_id=?", (uid,))
-        db.commit()
+        db_execute("DELETE FROM users WHERE id=%s", (uid,))
+        db_execute("DELETE FROM reset_tokens WHERE user_id=%s", (uid,))
+        db_commit()
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/user/<int:uid>/toggle_admin", methods=["POST"])
 @admin_required
 def admin_toggle_admin(uid):
     if uid != session["user_id"]:
-        get_db().execute("UPDATE users SET is_admin = 1 - is_admin WHERE id=?", (uid,))
-        get_db().commit()
+        db_execute("UPDATE users SET is_admin = 1 - is_admin WHERE id=%s", (uid,))
+        db_commit()
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/api/stats")
 @admin_required
 def api_stats():
-    db = get_db()
+    dl_row   = db_fetchone("SELECT COUNT(*) as cnt FROM download_log")
+    user_row = db_fetchone("SELECT COUNT(*) as cnt FROM users")
+    active_row = db_fetchone("SELECT COUNT(*) as cnt FROM users WHERE is_active=1")
     return jsonify({
-        **load_stats(),
-        "total_users":  db.execute("SELECT COUNT(*) FROM users").fetchone()[0],
-        "active_users": db.execute("SELECT COUNT(*) FROM users WHERE is_active=1").fetchone()[0],
+        "total_downloads": dl_row["cnt"] if dl_row else 0,
+        "total_users":     user_row["cnt"] if user_row else 0,
+        "active_users":    active_row["cnt"] if active_row else 0,
     })
 
 @app.route("/api/version")
@@ -422,18 +436,17 @@ def review_submit():
     if len(body) > 800:
         flash("El comentario es demasiado largo (máximo 800 caracteres).", "error")
         return redirect(url_for("index") + "#resenas")
-    db = get_db()
-    existing = db.execute(
-        "SELECT id FROM reviews WHERE user_id=?", (session["user_id"],)
-    ).fetchone()
+    existing = db_fetchone(
+        "SELECT id FROM reviews WHERE user_id=%s", (session["user_id"],)
+    )
     if existing:
         flash("Ya has enviado una reseña. Solo se permite una por usuario.", "error")
         return redirect(url_for("index") + "#resenas")
-    db.execute(
+    db_execute(
         "INSERT INTO reviews (user_id, rating, body, created_at) VALUES (?,?,?,?)",
         (session["user_id"], int(rating), body, _now())
     )
-    db.commit()
+    db_commit()
     flash("Reseña enviada. Estará visible tras ser aprobada.", "success")
     return redirect(url_for("index") + "#resenas")
 
@@ -441,32 +454,31 @@ def review_submit():
 @app.route("/admin/reviews")
 @admin_required
 def admin_reviews():
-    db      = get_db()
-    pending = db.execute(
+    pending = db_fetchall(
         """SELECT r.*, u.username FROM reviews r
            JOIN users u ON r.user_id=u.id
            WHERE r.approved=0 ORDER BY r.created_at DESC"""
-    ).fetchall()
-    approved = db.execute(
+    )
+    approved = db_fetchall(
         """SELECT r.*, u.username FROM reviews r
            JOIN users u ON r.user_id=u.id
            WHERE r.approved=1 ORDER BY r.created_at DESC"""
-    ).fetchall()
+    )
     return render_template("admin_reviews.html",
                            pending=pending, approved=approved)
 
 @app.route("/admin/reviews/<int:rid>/approve", methods=["POST"])
 @admin_required
 def review_approve(rid):
-    get_db().execute("UPDATE reviews SET approved=1 WHERE id=?", (rid,))
-    get_db().commit()
+    db_execute("UPDATE reviews SET approved=1 WHERE id=%s", (rid,))
+    db_commit()
     return redirect(url_for("admin_reviews"))
 
 @app.route("/admin/reviews/<int:rid>/delete", methods=["POST"])
 @admin_required
 def review_delete(rid):
-    get_db().execute("DELETE FROM reviews WHERE id=?", (rid,))
-    get_db().commit()
+    db_execute("DELETE FROM reviews WHERE id=%s", (rid,))
+    db_commit()
     return redirect(url_for("admin_reviews"))
 
 
@@ -477,24 +489,23 @@ def review_delete(rid):
 @app.route("/profile")
 @login_required
 def profile():
-    db   = get_db()
-    user = db.execute("SELECT * FROM users WHERE id=?", (session["user_id"],)).fetchone()
-    reviews = db.execute(
-        "SELECT * FROM reviews WHERE user_id=? ORDER BY created_at DESC",
+    user    = db_fetchone("SELECT * FROM users WHERE id=%s", (session["user_id"],))
+    reviews = db_fetchall(
+        "SELECT * FROM reviews WHERE user_id=%s ORDER BY created_at DESC",
         (session["user_id"],)
-    ).fetchall()
-    dl_count = db.execute(
-        "SELECT COUNT(*) FROM download_log WHERE user_id=?",
+    )
+    dl_row  = db_fetchone(
+        "SELECT COUNT(*) as cnt FROM download_log WHERE user_id=%s",
         (session["user_id"],)
-    ).fetchone()[0]
+    )
+    dl_count = dl_row["cnt"] if dl_row else 0
     return render_template("profile.html", user=user, reviews=reviews, dl_count=dl_count)
 
 
 @app.route("/profile/edit", methods=["GET","POST"])
 @login_required
 def profile_edit():
-    db   = get_db()
-    user = db.execute("SELECT * FROM users WHERE id=?", (session["user_id"],)).fetchone()
+    user  = db_fetchone("SELECT * FROM users WHERE id=%s", (session["user_id"],))
     error = None
     if request.method == "POST":
         action = request.form.get("action")
@@ -504,16 +515,16 @@ def profile_edit():
             if not new_email:
                 error = "El email no puede estar vacío."
             else:
-                dup = db.execute(
-                    "SELECT id FROM users WHERE email=? AND id!=?",
+                dup = db_fetchone(
+                    "SELECT id FROM users WHERE email=%s AND id!=%s",
                     (new_email, session["user_id"])
-                ).fetchone()
+                )
                 if dup:
                     error = "Ese email ya está en uso."
                 else:
-                    db.execute("UPDATE users SET email=? WHERE id=?",
+                    db_execute("UPDATE users SET email=%s WHERE id=%s",
                                (new_email, session["user_id"]))
-                    db.commit()
+                    db_commit()
                     flash("Email actualizado correctamente.", "success")
                     return redirect(url_for("profile"))
 
@@ -529,21 +540,21 @@ def profile_edit():
                 error = "Las contraseñas no coinciden."
             else:
                 salt = secrets.token_hex(16)
-                db.execute("UPDATE users SET password=?,salt=? WHERE id=?",
+                db_execute("UPDATE users SET password=%s,salt=%s WHERE id=%s",
                            (_hash_pwd(new_pwd, salt), salt, session["user_id"]))
-                db.commit()
+                db_commit()
                 flash("Contraseña actualizada correctamente.", "success")
                 return redirect(url_for("profile"))
 
         elif action == "avatar":
             avatar_url = request.form.get("avatar_url","").strip()
-            db.execute("UPDATE users SET avatar_url=? WHERE id=?",
+            db_execute("UPDATE users SET avatar_url=%s WHERE id=%s",
                        (avatar_url or None, session["user_id"]))
-            db.commit()
+            db_commit()
             flash("Avatar actualizado.", "success")
             return redirect(url_for("profile"))
 
-        user = db.execute("SELECT * FROM users WHERE id=?", (session["user_id"],)).fetchone()
+        user = db_fetchone("SELECT * FROM users WHERE id=%s", (session["user_id"],))
 
     return render_template("profile_edit.html", user=user, error=error)
 
@@ -555,14 +566,13 @@ def profile_edit():
 @app.route("/api/admin/downloads_chart")
 @admin_required
 def api_downloads_chart():
-    db = get_db()
-    rows = db.execute(
+    rows = db_fetchall(
         """SELECT substr(ts,1,10) as day, COUNT(*) as cnt
            FROM download_log
            GROUP BY day
            ORDER BY day ASC
            LIMIT 30"""
-    ).fetchall()
+    )
     return jsonify({
         "labels": [r["day"] for r in rows],
         "data":   [r["cnt"] for r in rows],
@@ -582,92 +592,19 @@ def api_bug():
     if len(description) > 2000:
         return jsonify({"ok": False, "error": "Descripción demasiado larga."}), 400
     user_id = session.get("user_id")
-    get_db().execute(
+    db_execute(
         "INSERT INTO bug_reports (user_id, description, created_at) VALUES (?,?,?)",
         (user_id, description, _now())
     )
-    get_db().commit()
+    db_commit()
     return jsonify({"ok": True})
 
 @app.route("/admin/bug/<int:bid>/delete", methods=["POST"])
 @admin_required
 def admin_bug_delete(bid):
-    get_db().execute("DELETE FROM bug_reports WHERE id=?", (bid,))
-    get_db().commit()
+    db_execute("DELETE FROM bug_reports WHERE id=%s", (bid,))
+    db_commit()
     return redirect(url_for("admin_dashboard"))
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# CHATBOT
-# ══════════════════════════════════════════════════════════════════════════════
-
-@app.route("/api/chat", methods=["POST"])
-def api_chat():
-    if not GEMINI_API_KEY:
-        return jsonify({"error": "Chatbot no configurado."}), 503
-
-    data = request.get_json(silent=True) or {}
-    messages = data.get("messages", [])
-    if not messages or not isinstance(messages, list):
-        return jsonify({"error": "Petición inválida."}), 400
-
-    # Limitar historial a últimos 10 mensajes para no gastar tokens
-    messages = messages[-10:]
-
-    system_prompt = """Eres el asistente de soporte oficial de Reconquest, un videojuego RTS gratuito.
-
-Información clave:
-- Género: Estrategia en tiempo real (RTS), un jugador
-- Ambientación: Ucronía histórica en Portugal — la Revolución de los Claveles de 1974 fracasó y desencadena una guerra civil ficticia
-- El jugador conquista fábricas para obtener recursos, gestiona tropas y captura sectores hasta destruir la base enemiga
-- Completamente GRATUITO. Requiere registro para descargar
-- Solo disponible para Windows 10/11 (64-bit)
-- Requisitos: 4 GB RAM, DirectX 11, ~500 MB de disco
-- Si Windows SmartScreen alerta, es un falso positivo (sin firma digital). Clic en "Más información → Ejecutar de todas formas"
-- Desarrollado con Unity 6 y C# como Trabajo de Fin de Grado
-- No tiene multijugador
-- Para recuperar contraseña: ir a /forgot en la web
-
-Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información."""
-
-    # Convertir historial al formato de Gemini (role: user/model)
-    gemini_contents = []
-    for msg in messages:
-        role = "model" if msg.get("role") == "assistant" else "user"
-        gemini_contents.append({
-            "role": role,
-            "parts": [{"text": msg.get("content", "")}]
-        })
-
-    payload = json.dumps({
-        "system_instruction": {"parts": [{"text": system_prompt}]},
-        "contents": gemini_contents,
-        "generationConfig": {
-            "maxOutputTokens": 300,
-            "temperature": 0.7
-        }
-    }).encode("utf-8")
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    req = urllib.request.Request(
-        url,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST"
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-            reply = result["candidates"][0]["content"]["parts"][0]["text"]
-            return jsonify({"reply": reply})
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8")
-        app.logger.error("Gemini API error: %s %s", e.code, body)
-        return jsonify({"error": "Error al contactar con la IA."}), 502
-    except Exception as e:
-        app.logger.error("Chat error: %s", e)
-        return jsonify({"error": "Error interno."}), 500
 
 
 if __name__ == "__main__":
