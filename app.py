@@ -1,4 +1,5 @@
 import os, json, sqlite3, hashlib, secrets, smtplib, logging
+import urllib.request, urllib.error
 from datetime import datetime, timedelta
 from functools import wraps
 from email.mime.text import MIMEText
@@ -15,6 +16,8 @@ INSTALLER_NAME = "Reconquest_Setup_v1.0.0.exe"
 INSTALLER_PATH = os.path.join(os.path.dirname(__file__), "static", "installer", INSTALLER_NAME)
 STATS_FILE     = os.path.join(os.path.dirname(__file__), "data", "stats.json")
 DB_PATH        = os.path.join(os.path.dirname(__file__), "data", "reconquest.db")
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 SMTP_HOST  = os.environ.get("SMTP_HOST",  "smtp.gmail.com")
 SMTP_PORT  = int(os.environ.get("SMTP_PORT", 587))
@@ -557,6 +560,79 @@ def api_downloads_chart():
         "labels": [r["day"] for r in rows],
         "data":   [r["cnt"] for r in rows],
     })
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CHATBOT
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    if not GEMINI_API_KEY:
+        return jsonify({"error": "Chatbot no configurado."}), 503
+
+    data = request.get_json(silent=True) or {}
+    messages = data.get("messages", [])
+    if not messages or not isinstance(messages, list):
+        return jsonify({"error": "Petición inválida."}), 400
+
+    # Limitar historial a últimos 10 mensajes para no gastar tokens
+    messages = messages[-10:]
+
+    system_prompt = """Eres el asistente de soporte oficial de Reconquest, un videojuego RTS gratuito.
+
+Información clave:
+- Género: Estrategia en tiempo real (RTS), un jugador
+- Ambientación: Ucronía histórica en Portugal — la Revolución de los Claveles de 1974 fracasó y desencadena una guerra civil ficticia
+- El jugador conquista fábricas para obtener recursos, gestiona tropas y captura sectores hasta destruir la base enemiga
+- Completamente GRATUITO. Requiere registro para descargar
+- Solo disponible para Windows 10/11 (64-bit)
+- Requisitos: 4 GB RAM, DirectX 11, ~500 MB de disco
+- Si Windows SmartScreen alerta, es un falso positivo (sin firma digital). Clic en "Más información → Ejecutar de todas formas"
+- Desarrollado con Unity 6 y C# como Trabajo de Fin de Grado
+- No tiene multijugador
+- Para recuperar contraseña: ir a /forgot en la web
+
+Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información."""
+
+    # Convertir historial al formato de Gemini (role: user/model)
+    gemini_contents = []
+    for msg in messages:
+        role = "model" if msg.get("role") == "assistant" else "user"
+        gemini_contents.append({
+            "role": role,
+            "parts": [{"text": msg.get("content", "")}]
+        })
+
+    payload = json.dumps({
+        "system_instruction": {"parts": [{"text": system_prompt}]},
+        "contents": gemini_contents,
+        "generationConfig": {
+            "maxOutputTokens": 300,
+            "temperature": 0.7
+        }
+    }).encode("utf-8")
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            reply = result["candidates"][0]["content"]["parts"][0]["text"]
+            return jsonify({"reply": reply})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        app.logger.error("Gemini API error: %s %s", e.code, body)
+        return jsonify({"error": "Error al contactar con la IA."}), 502
+    except Exception as e:
+        app.logger.error("Chat error: %s", e)
+        return jsonify({"error": "Error interno."}), 500
 
 
 if __name__ == "__main__":
