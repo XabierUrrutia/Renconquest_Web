@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 # ── Config ────────────────────────────────────────────────────────────────────
 GAME_VERSION   = "1.0.0"
 INSTALLER_NAME = "Reconquest_Setup_v1.0.0.exe"
-INSTALLER_PATH = os.path.join(os.path.dirname(__file__), "static", "installer", INSTALLER_NAME)
+INSTALLER_URL  = "https://github.com/XabierUrrutia/Renconquest_Web/releases/download/v1.0.0/Reconquest_Setup_v1.0.0.exe"
 STATS_FILE     = os.path.join(os.path.dirname(__file__), "data", "stats.json")
 DB_PATH        = os.path.join(os.path.dirname(__file__), "data", "reconquest.db")
 
@@ -198,8 +198,6 @@ def index():
 @app.route("/download")
 @login_required
 def download():
-    if not os.path.exists(INSTALLER_PATH):
-        abort(404)
     db = get_db()
     db.execute(
         "INSERT INTO download_log (user_id,ip,user_agent,ts) VALUES (?,?,?,?)",
@@ -209,9 +207,7 @@ def download():
     stats = load_stats()
     stats["total_downloads"] = stats.get("total_downloads", 0) + 1
     save_stats(stats)
-    return send_file(INSTALLER_PATH, as_attachment=True,
-                     download_name=INSTALLER_NAME,
-                     mimetype="application/octet-stream")
+    return redirect(INSTALLER_URL)
 
 @app.route("/register", methods=["GET","POST"])
 def register():
