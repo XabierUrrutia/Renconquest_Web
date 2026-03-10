@@ -273,6 +273,41 @@
     </a>
   </div>
 
+  <!-- BUG REPORTS -->
+  <p class="sec-title"><span class="sec-tag">// 03</span> Reportes de bugs</p>
+  <div class="table-wrap" style="margin-bottom:3rem;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Usuario</th>
+          <th>Descripción</th>
+          <th>Fecha</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if bug_reports %}
+          {% for b in bug_reports %}
+          <tr>
+            <td style="color:var(--muted);">{{ b.id }}</td>
+            <td class="dl-user">{{ b.username or 'Anónimo' }}</td>
+            <td style="white-space:normal;max-width:420px;color:var(--light);font-size:.88rem;">{{ b.description }}</td>
+            <td class="dl-ts">{{ b.created_at[:19].replace('T',' ') }}</td>
+            <td>
+              <form method="POST" action="/admin/bug/{{ b.id }}/delete" style="display:inline">
+                <button class="btn-action btn-delete" type="submit">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="5" style="color:var(--muted);font-style:italic;padding:1.5rem 1rem;">Sin reportes de bugs todavía.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
   <!-- DOWNLOAD LOG -->
   <p class="sec-title"><span class="sec-tag">// 02</span> Últimas descargas</p>
   <div class="table-wrap">

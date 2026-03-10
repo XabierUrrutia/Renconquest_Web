@@ -1155,8 +1155,17 @@
 
 <script>
 const CHAT_QUICK = ['¿Es gratis?','¿Cómo descargo?','Requisitos','Olvidé contraseña','Reportar bug'];
+
+const CHAT_ANSWERS = {
+  '¿Es gratis?': '¡Sí! Reconquest es completamente <strong>gratuito</strong>. Solo necesitas registrarte en la web para poder descargarlo.',
+  '¿Cómo descargo?': 'Para descargar el juego:<br>1. Regístrate o inicia sesión<br>2. Pulsa el botón <strong>Descargar</strong> en la página principal<br>3. Si Windows SmartScreen alerta, es un falso positivo — haz clic en <em>"Más información → Ejecutar de todas formas"</em>',
+  'Requisitos': 'Requisitos mínimos:<br>• <strong>SO:</strong> Windows 10/11 (64-bit)<br>• <strong>RAM:</strong> 4 GB<br>• <strong>GPU:</strong> DirectX 11<br>• <strong>Disco:</strong> ~500 MB libres',
+  'Olvidé contraseña': 'Para recuperar tu contraseña ve a <a href="/forgot" style="color:#BFBB80;">/forgot</a> e introduce tu email. Te enviaremos un enlace de recuperación.',
+};
+
 let chatOpen = false;
-let chatHistory = []; // historial de mensajes para contexto
+let bugMode = false;
+const userLoggedIn = {{ 'true' if user else 'false' }};
 
 window.addEventListener('DOMContentLoaded', () => {
   chatAddBot('¡Hola, Comandante! 👋 Soy el asistente de <strong>Reconquest</strong>. ¿En qué puedo ayudarte?');
@@ -1167,6 +1176,10 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function toggleChat() {
+  if (!userLoggedIn) {
+    window.location.href = '/login?next=/';
+    return;
+  }
   chatOpen = !chatOpen;
   document.getElementById('chat-window').classList.toggle('open', chatOpen);
   document.getElementById('chat-icon-open').style.display  = chatOpen ? 'none'  : 'block';
@@ -1187,14 +1200,6 @@ function chatAddUser(text) {
   document.getElementById('chat-messages').appendChild(d);
   chatScroll();
 }
-function chatAddTyping() {
-  const d = document.createElement('div');
-  d.className = 'cmsg bot'; d.id = 'chat-typing';
-  d.innerHTML = '<span style="letter-spacing:.2em;color:#6b6a4a;">···</span>';
-  document.getElementById('chat-messages').appendChild(d);
-  chatScroll();
-  return d;
-}
 function chatScroll() {
   const el = document.getElementById('chat-messages');
   el.scrollTop = el.scrollHeight;
@@ -1214,35 +1219,52 @@ function chatSend() {
   const txt = inp.value.trim();
   if (!txt) return;
   inp.value = '';
-  chatHandle(txt);
+  if (bugMode) {
+    submitBug(txt);
+  } else {
+    chatHandle(txt);
+  }
 }
-async function chatHandle(text) {
-  chatAddUser(text);
+function chatHandle(text) {
+  if (text === 'Reportar bug') {
+    bugMode = true;
+    document.getElementById('chat-qr').innerHTML = '';
+    chatAddBot('Describe el bug con el mayor detalle posible y pulsa enviar. Incluye qué estabas haciendo cuando ocurrió.');
+    document.getElementById('chat-input').placeholder = 'Describe el bug...';
+    document.getElementById('chat-input').focus();
+    return;
+  }
+
+  bugMode = false;
   document.getElementById('chat-qr').innerHTML = '';
+  const reply = CHAT_ANSWERS[text];
+  if (reply) {
+    chatAddBot(reply);
+  } else {
+    chatAddBot('No tengo respuesta para eso. Prueba con una de las opciones o contacta con el desarrollador.');
+  }
+  chatRenderQR(CHAT_QUICK);
+}
+async function submitBug(description) {
+  bugMode = false;
+  document.getElementById('chat-input').placeholder = 'Escribe tu pregunta...';
   document.getElementById('chat-input').disabled = true;
   document.getElementById('chat-send').disabled = true;
 
-  // Añadir al historial
-  chatHistory.push({ role: 'user', content: text });
-
-  const typing = chatAddTyping();
-
   try {
-    const res = await fetch('/api/chat', {
+    const res = await fetch('/api/bug', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: chatHistory })
+      body: JSON.stringify({ description })
     });
     const data = await res.json();
-    typing.remove();
-
-    const reply = data.reply || data.error || 'Error al conectar con el asistente.';
-    chatAddBot(reply);
-    chatHistory.push({ role: 'assistant', content: reply });
-
+    if (data.ok) {
+      chatAddBot('✅ Bug reportado correctamente. ¡Gracias, Comandante! Lo revisaremos pronto.');
+    } else {
+      chatAddBot('Hubo un problema al enviar el reporte. Inténtalo de nuevo más tarde.');
+    }
   } catch(e) {
-    typing.remove();
-    chatAddBot('Error de conexión. Revisa las <a href="#faq">preguntas frecuentes</a>.');
+    chatAddBot('Error de conexión al enviar el reporte.');
   }
 
   document.getElementById('chat-input').disabled = false;

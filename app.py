@@ -72,6 +72,12 @@ def init_db():
             user_agent TEXT,
             ts         TEXT    NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS bug_reports (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER,
+            description TEXT    NOT NULL,
+            created_at  TEXT    NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS reviews (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id    INTEGER NOT NULL,
@@ -335,6 +341,11 @@ def admin_dashboard():
            ORDER BY d.ts DESC LIMIT 25"""
     ).fetchall()
     stats = load_stats()
+    bug_reports = db.execute(
+        """SELECT b.id, b.description, b.created_at, u.username
+           FROM bug_reports b LEFT JOIN users u ON b.user_id=u.id
+           ORDER BY b.created_at DESC"""
+    ).fetchall()
     return render_template("admin.html",
         users=users,
         total_users=len(users),
@@ -342,6 +353,7 @@ def admin_dashboard():
         total_downloads=stats.get("total_downloads",0),
         recent_dls=recent_dls,
         version=GAME_VERSION,
+        bug_reports=bug_reports,
     )
 
 @app.route("/admin/user/<int:uid>/toggle", methods=["POST"])
@@ -558,6 +570,34 @@ def api_downloads_chart():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# BUG REPORTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/bug", methods=["POST"])
+def api_bug():
+    data = request.get_json(silent=True) or {}
+    description = data.get("description", "").strip()
+    if not description or len(description) < 5:
+        return jsonify({"ok": False, "error": "Descripción demasiado corta."}), 400
+    if len(description) > 2000:
+        return jsonify({"ok": False, "error": "Descripción demasiado larga."}), 400
+    user_id = session.get("user_id")
+    get_db().execute(
+        "INSERT INTO bug_reports (user_id, description, created_at) VALUES (?,?,?)",
+        (user_id, description, _now())
+    )
+    get_db().commit()
+    return jsonify({"ok": True})
+
+@app.route("/admin/bug/<int:bid>/delete", methods=["POST"])
+@admin_required
+def admin_bug_delete(bid):
+    get_db().execute("DELETE FROM bug_reports WHERE id=?", (bid,))
+    get_db().commit()
+    return redirect(url_for("admin_dashboard"))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # CHATBOT
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -608,7 +648,7 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
         }
     }).encode("utf-8")
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     req = urllib.request.Request(
         url,
         data=payload,
