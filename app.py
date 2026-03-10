@@ -186,9 +186,8 @@ def index():
     return render_template("index.html",
         version=GAME_VERSION,
         downloads=stats["total_downloads"],
-        installer_exists=os.path.exists(INSTALLER_PATH),
-        installer_size=(round(os.path.getsize(INSTALLER_PATH)/(1024*1024),1)
-                        if os.path.exists(INSTALLER_PATH) else None),
+        installer_exists=True,
+        installer_size=None,
         user=user,
         reviews=reviews,
         avg_rating=avg_rating,
@@ -387,7 +386,7 @@ def api_stats():
 
 @app.route("/api/version")
 def api_version():
-    return jsonify({"version": GAME_VERSION, "available": os.path.exists(INSTALLER_PATH)})
+    return jsonify({"version": GAME_VERSION, "available": True})
 
 
 # ══════════════════════════════════════════════════════════════════════════════
