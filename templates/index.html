@@ -58,44 +58,48 @@
     /* ── NAV ──────────────────────────────────────────────── */
     /* ── MODO DÍA ─────────────────────────────────────────────────── */
     body.day-mode {
-      --bg:    #f5f2eb;
-      --dark:  #eae6da;
-      --white: #1c1e12;
-      --sand:  #3d3a1a;
-      --gold:  #6b5e18;
-      --light: #2e2c14;
-      --muted: #7a7450;
-      background: #f5f2eb !important;
-      color: #1c1e12;
+      background: #ede8dc !important;
     }
-    body.day-mode * { color: inherit; }
     body.day-mode nav {
-      background: rgba(245,242,235,.97) !important;
-      border-bottom-color: rgba(107,94,24,.25) !important;
+      background: rgba(247,245,240,.97) !important;
+      border-bottom-color: rgba(60,60,60,.15) !important;
     }
+    /* Textos: todos oscuros para que se lean bien */
+    body.day-mode,
+    body.day-mode h1, body.day-mode h2, body.day-mode h3,
+    body.day-mode p, body.day-mode span, body.day-mode a,
+    body.day-mode li, body.day-mode td, body.day-mode th,
+    body.day-mode label, body.day-mode button {
+      color: #2a2a2a !important;
+    }
+    body.day-mode a:hover { color: #555 !important; }
+    /* Fondos de secciones */
     body.day-mode section,
     body.day-mode .hero,
-    body.day-mode footer,
-    body.day-mode [style*="background:rgba(26,29,15"],
-    body.day-mode [style*="background: rgba(26,29,15"] {
-      background: #f5f2eb !important;
+    body.day-mode footer {
+      background: #ede8dc !important;
     }
+    body.day-mode [style*="background:rgba(26,29,15"],
+    body.day-mode [style*="background: rgba(26,29,15"],
     body.day-mode [style*="background:rgba(10,11,7"],
     body.day-mode [style*="background: rgba(10,11,7"] {
-      background: #eae6da !important;
+      background: #e4dfd4 !important;
     }
+    /* Bordes */
     body.day-mode [style*="border:1px solid rgba(87,101,51"],
     body.day-mode [style*="border: 1px solid rgba(87,101,51"] {
-      border-color: rgba(107,94,24,.35) !important;
+      border-color: rgba(60,60,60,.2) !important;
     }
-    body.day-mode #chat-window,
-    body.day-mode .chat-header,
-    body.day-mode #chat-messages {
-      background: #eae6da !important;
-      color: #1c1e12 !important;
-    }
-    body.day-mode .cmsg.bot { background: #dedad0 !important; color: #1c1e12 !important; }
-    body.day-mode .cmsg.user { background: #c8c4a8 !important; color: #1c1e12 !important; }
+    /* Chatbot */
+    body.day-mode #chat-window { background: #e4dfd4 !important; }
+    body.day-mode .chat-header { background: #dbd5c8 !important; }
+    body.day-mode #chat-messages { background: #e4dfd4 !important; }
+    body.day-mode .cmsg.bot { background: #dbd5c8 !important; color: #2a2a2a !important; }
+    body.day-mode .cmsg.user { background: #ccc6b8 !important; color: #2a2a2a !important; }
+    body.day-mode #chat-input { background: #dbd5c8 !important; color: #2a2a2a !important; border-color: rgba(60,60,60,.2) !important; }
+    body.day-mode #chat-send { background: #5a5a3a !important; color: #ede8dc !important; }
+    /* Botón tema */
+    body.day-mode #theme-toggle { color: #2a2a2a !important; border-color: rgba(60,60,60,.3) !important; }
 
     #theme-toggle {
       background: none;
