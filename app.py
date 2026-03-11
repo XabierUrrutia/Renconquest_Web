@@ -713,12 +713,13 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode("utf-8"))
+            app.logger.info("OpenRouter response: %s", json.dumps(result)[:500])
             reply = result["choices"][0]["message"]["content"]
             return jsonify({"reply": reply})
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8")
         app.logger.error("OpenRouter API error: %s %s", e.code, body)
-        return jsonify({"error": f"Error {e.code}: {e.read().decode()}"}), 502
+        return jsonify({"error": f"Error {e.code}: {body}"}), 502
     except Exception as e:
         app.logger.error("Chat error: %s", e)
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
