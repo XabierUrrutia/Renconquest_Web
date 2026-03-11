@@ -178,6 +178,55 @@ def send_reset_email(to_email, token):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# GEMINI HELPER
+# ══════════════════════════════════════════════════════════════════════════════
+
+def gemini_call(prompt, max_tokens=300):
+    """Llama a Gemini y devuelve el texto de respuesta o None si falla."""
+    if not GEMINI_API_KEY:
+        return None
+    payload = json.dumps({
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.2}
+    }).encode("utf-8")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    req = urllib.request.Request(url, data=payload,
+                                  headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return result["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except Exception as e:
+        app.logger.error("Gemini error: %s", e)
+        return None
+
+def review_is_clean(text):
+    """Devuelve (True, None) si la reseña es válida, o (False, motivo) si no lo es."""
+    if not GEMINI_API_KEY:
+        return True, None  # Si no hay API key, se permite sin filtro
+    prompt = f"""Eres un moderador de contenido para un videojuego. Analiza la siguiente reseña y determina si contiene:
+- Insultos, lenguaje ofensivo, odio o contenido inapropiado
+- Spam, texto sin sentido, caracteres aleatorios o contenido irrelevante
+
+Reseña: "{text}"
+
+Responde ÚNICAMENTE con JSON en este formato exacto, sin texto adicional:
+{{"ok": true}} si la reseña es válida
+{{"ok": false, "reason": "motivo breve en español"}} si no lo es"""
+    reply = gemini_call(prompt, max_tokens=80)
+    if not reply:
+        return True, None  # Si falla la API, se permite
+    try:
+        reply = reply.replace("```json", "").replace("```", "").strip()
+        data = json.loads(reply)
+        if data.get("ok"):
+            return True, None
+        return False, data.get("reason", "Contenido no permitido.")
+    except Exception:
+        return True, None  # Si falla el parseo, se permite
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # ROUTES — PUBLIC
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -433,6 +482,11 @@ def review_submit():
     if existing:
         flash("Ya has enviado una reseña. Solo se permite una por usuario.", "error")
         return redirect(url_for("index") + "#resenas")
+    # Filtro de contenido con Gemini
+    clean, reason = review_is_clean(body)
+    if not clean:
+        flash(f"Tu reseña no ha podido publicarse: {reason}", "error")
+        return redirect(url_for("index") + "#resenas")
     db_execute(
         "INSERT INTO reviews (user_id, rating, body, created_at) VALUES (?,?,?,?)",
         (session["user_id"], int(rating), body, _now())
@@ -596,6 +650,65 @@ def admin_bug_delete(bid):
     db_execute("DELETE FROM bug_reports WHERE id=%s", (bid,))
     db_commit()
     return redirect(url_for("admin_dashboard"))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CHATBOT
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    if not GEMINI_API_KEY:
+        return jsonify({"error": "Chatbot no configurado."}), 503
+
+    data = request.get_json(silent=True) or {}
+    messages = data.get("messages", [])
+    if not messages or not isinstance(messages, list):
+        return jsonify({"error": "Petición inválida."}), 400
+
+    messages = messages[-10:]
+
+    system_prompt = """Eres el asistente de soporte oficial de Reconquest, un videojuego RTS gratuito.
+
+Información clave:
+- Género: Estrategia en tiempo real (RTS), un jugador
+- Ambientación: Ucronía histórica en Portugal — la Revolución de los Claveles de 1974 fracasó y desencadena una guerra civil ficticia
+- El jugador conquista fábricas para obtener recursos, gestiona tropas y captura sectores hasta destruir la base enemiga
+- Completamente GRATUITO. Requiere registro para descargar
+- Solo disponible para Windows 10/11 (64-bit)
+- Requisitos: 4 GB RAM, DirectX 11, ~500 MB de disco
+- Si Windows SmartScreen alerta, es un falso positivo. Clic en "Más información → Ejecutar de todas formas"
+- Desarrollado con Unity 6 y C# como Trabajo de Fin de Grado
+- No tiene multijugador
+- Para recuperar contraseña: ir a /forgot en la web
+
+Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información."""
+
+    gemini_contents = [{"role": "user", "parts": [{"text": system_prompt + "\n\nEres el asistente. Responde al siguiente historial de conversación:"}]}]
+    for msg in messages:
+        role = "model" if msg.get("role") == "assistant" else "user"
+        gemini_contents.append({"role": role, "parts": [{"text": msg.get("content", "")}]})
+
+    payload = json.dumps({
+        "contents": gemini_contents,
+        "generationConfig": {"maxOutputTokens": 300, "temperature": 0.7}
+    }).encode("utf-8")
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    req = urllib.request.Request(url, data=payload,
+                                  headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            reply = result["candidates"][0]["content"]["parts"][0]["text"]
+            return jsonify({"reply": reply})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        app.logger.error("Gemini API error: %s %s", e.code, body)
+        return jsonify({"error": "Error al contactar con la IA."}), 502
+    except Exception as e:
+        app.logger.error("Chat error: %s", e)
+        return jsonify({"error": "Error interno."}), 500
 
 
 if __name__ == "__main__":
