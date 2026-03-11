@@ -17,7 +17,7 @@ GAME_VERSION   = "1.0.0"
 INSTALLER_NAME = "Reconquest_Setup_v1.0.0.exe"
 INSTALLER_URL  = "https://github.com/XabierUrrutia/Renconquest_Web/releases/download/v1.0.0/Reconquest_Setup_v1.0.0.exe"
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 SMTP_HOST  = os.environ.get("SMTP_HOST",  "smtp.gmail.com")
 SMTP_PORT  = int(os.environ.get("SMTP_PORT", 587))
@@ -178,31 +178,38 @@ def send_reset_email(to_email, token):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# GEMINI HELPER
+# AI HELPER
 # ══════════════════════════════════════════════════════════════════════════════
 
-def gemini_call(prompt, max_tokens=300):
-    """Llama a Gemini y devuelve el texto de respuesta o None si falla."""
-    if not GEMINI_API_KEY:
+def openrouter_call(prompt, max_tokens=300):
+    """Llama a OpenRouter y devuelve el texto de respuesta o None si falla."""
+    if not OPENROUTER_API_KEY:
         return None
     payload = json.dumps({
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.2}
+        "model": "meta-llama/llama-3.2-3b-instruct:free",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": max_tokens
     }).encode("utf-8")
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-    req = urllib.request.Request(url, data=payload,
-                                  headers={"Content-Type": "application/json"}, method="POST")
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+        },
+        method="POST"
+    )
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            return result["candidates"][0]["content"]["parts"][0]["text"].strip()
+            return result["choices"][0]["message"]["content"].strip()
     except Exception as e:
-        app.logger.error("Gemini error: %s", e)
+        app.logger.error("OpenRouter error: %s", e)
         return None
 
 def review_is_clean(text):
     """Devuelve (True, None) si la reseña es válida, o (False, motivo) si no lo es."""
-    if not GEMINI_API_KEY:
+    if not OPENROUTER_API_KEY:
         return True, None  # Si no hay API key, se permite sin filtro
     prompt = f"""Eres un moderador de contenido para un videojuego. Analiza la siguiente reseña y determina si contiene:
 - Insultos, lenguaje ofensivo, odio o contenido inapropiado
@@ -213,7 +220,7 @@ Reseña: "{text}"
 Responde ÚNICAMENTE con JSON en este formato exacto, sin texto adicional:
 {{"ok": true}} si la reseña es válida
 {{"ok": false, "reason": "motivo breve en español"}} si no lo es"""
-    reply = gemini_call(prompt, max_tokens=80)
+    reply = openrouter_call(prompt, max_tokens=80)
     if not reply:
         return True, None  # Si falla la API, se permite
     try:
@@ -658,7 +665,7 @@ def admin_bug_delete(bid):
 
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
-    if not GEMINI_API_KEY:
+    if not OPENROUTER_API_KEY:
         return jsonify({"error": "Chatbot no configurado."}), 503
 
     data = request.get_json(silent=True) or {}
@@ -684,49 +691,38 @@ Información clave:
 
 Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información."""
 
-    # API v1: system prompt como primer mensaje user + model dummy
-    gemini_contents = [
-        {"role": "user",  "parts": [{"text": system_prompt}]},
-        {"role": "model", "parts": [{"text": "Entendido. Soy el asistente de Reconquest, listo para ayudar."}]},
-    ]
+    or_messages = [{"role": "system", "content": system_prompt}]
     for msg in messages:
-        role = "model" if msg.get("role") == "assistant" else "user"
-        gemini_contents.append({"role": role, "parts": [{"text": msg.get("content", "")}]})
+        or_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
 
     payload = json.dumps({
-        "contents": gemini_contents,
-        "generationConfig": {"maxOutputTokens": 300, "temperature": 0.7}
+        "model": "meta-llama/llama-3.2-3b-instruct:free",
+        "messages": or_messages,
+        "max_tokens": 300
     }).encode("utf-8")
 
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-    req = urllib.request.Request(url, data=payload,
-                                  headers={"Content-Type": "application/json"}, method="POST")
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+        },
+        method="POST"
+    )
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            reply = result["candidates"][0]["content"]["parts"][0]["text"]
+            reply = result["choices"][0]["message"]["content"]
             return jsonify({"reply": reply})
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8")
-        app.logger.error("Gemini API error: %s %s", e.code, body)
-        return jsonify({"error": f"Error Gemini {e.code}: {body}"}), 502
+        app.logger.error("OpenRouter API error: %s %s", e.code, body)
+        return jsonify({"error": "El asistente no está disponible ahora mismo. Inténtalo más tarde."}), 502
     except Exception as e:
         app.logger.error("Chat error: %s", e)
-        return jsonify({"error": f"Error interno: {str(e)}"}), 500
+        return jsonify({"error": "Error interno. Inténtalo más tarde."}), 500
 
-
-@app.route("/api/gemini_models")
-@admin_required
-def api_gemini_models():
-    if not GEMINI_API_KEY:
-        return jsonify({"error": "No API key"}), 503
-    url = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
-    req = urllib.request.Request(url, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return jsonify(json.loads(resp.read().decode("utf-8")))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
