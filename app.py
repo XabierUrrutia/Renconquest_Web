@@ -189,7 +189,7 @@ def gemini_call(prompt, max_tokens=300):
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.2}
     }).encode("utf-8")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_API_KEY}"
     req = urllib.request.Request(url, data=payload,
                                   headers={"Content-Type": "application/json"}, method="POST")
     try:
@@ -697,7 +697,7 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
         "generationConfig": {"maxOutputTokens": 300, "temperature": 0.7}
     }).encode("utf-8")
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_API_KEY}"
     req = urllib.request.Request(url, data=payload,
                                   headers={"Content-Type": "application/json"}, method="POST")
     try:
