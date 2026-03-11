@@ -520,7 +520,7 @@ def review_submit():
         (session["user_id"], int(rating), body, _now())
     )
     db_commit()
-    flash("Reseña enviada. Estará visible tras ser aprobada.", "success")
+    flash("Tu reseña ha sido enviada pero necesita ser validada por un administrador antes de aparecer en la página.", "warning")
     return redirect(url_for("index") + "#resenas")
 
 

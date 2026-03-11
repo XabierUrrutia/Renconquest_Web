@@ -56,6 +56,33 @@
     }
 
     /* ── NAV ──────────────────────────────────────────────── */
+    /* ── MODO DÍA ─────────────────────────────────────────────────── */
+    body.day-mode {
+      --bg:    #f0ede4;
+      --dark:  #e8e4d8;
+      --white: #1a1d0f;
+      --sand:  #4a4520;
+      --gold:  #5a4e10;
+      --light: #2a2810;
+      --muted: #6b6040;
+      background: #f0ede4;
+    }
+    body.day-mode nav { background: rgba(240,237,228,.95); border-bottom-color: rgba(90,78,16,.2); }
+    body.day-mode .hero { background: linear-gradient(180deg,#e8e4d8 0%,#f0ede4 100%); }
+
+    #theme-toggle {
+      background: none;
+      border: 1px solid rgba(140,127,59,.35);
+      color: #8C7F3B;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      padding: .3rem .7rem;
+      cursor: crosshair;
+      transition: background .2s, color .2s;
+    }
+    #theme-toggle:hover { background: rgba(140,127,59,.15); color: #BFBB80; }
+
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
@@ -506,6 +533,7 @@
       <a href="/login"    style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#6b6a4a;text-decoration:none;">Login</a>
       <a href="/register" style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#BFBB80;text-decoration:none;border:1px solid rgba(140,127,59,.35);padding:.3rem .8rem;">Registro</a>
     {% endif %}
+    <button id="theme-toggle" onclick="toggleTheme()" title="Modo día/noche">☀️ Día</button>
   </div>
 </nav>
 
@@ -1225,6 +1253,27 @@ function chatSend() {
     chatHandle(txt);
   }
 }
+// ── TEMA ──────────────────────────────────────────────────────────
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'day') {
+    document.body.classList.add('day-mode');
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = '🌙 Noche';
+  }
+})();
+
+function toggleTheme() {
+  const btn = document.getElementById('theme-toggle');
+  if (document.body.classList.toggle('day-mode')) {
+    localStorage.setItem('theme', 'day');
+    btn.textContent = '🌙 Noche';
+  } else {
+    localStorage.setItem('theme', 'night');
+    btn.textContent = '☀️ Día';
+  }
+}
+
 let chatHistory = [];
 
 async function chatHandle(text) {
