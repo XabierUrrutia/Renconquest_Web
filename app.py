@@ -513,14 +513,14 @@ def review_submit():
     # Filtro de contenido con Gemini
     clean, reason = review_is_clean(body)
     if not clean:
-        flash(f"Tu reseña no ha podido publicarse: {reason}", "error")
+        flash(f"Tu reseña ha sido rechazada por mala conducta: {reason}. Por favor, mantén un tono respetuoso.", "error")
         return redirect(url_for("index") + "#resenas")
     db_execute(
         "INSERT INTO reviews (user_id, rating, body, created_at) VALUES (?,?,?,?)",
         (session["user_id"], int(rating), body, _now())
     )
     db_commit()
-    flash("Tu reseña ha sido enviada pero necesita ser validada por un administrador antes de aparecer en la página.", "warning")
+    flash("Reseña enviada. Estará visible tras ser aprobada por un administrador.", "success")
     return redirect(url_for("index") + "#resenas")
 
 
