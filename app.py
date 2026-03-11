@@ -689,7 +689,8 @@ Información clave:
 - No tiene multijugador
 - Para recuperar contraseña: ir a /forgot en la web
 
-Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información."""
+Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información.
+IMPORTANTE: Responde SOLO con el mensaje final. No muestres tu razonamiento interno, ni pasos previos, ni texto entre asteriscos. Solo la respuesta directa."""
 
     or_messages = [{"role": "system", "content": system_prompt}]
     for msg in messages:
@@ -725,6 +726,23 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
         app.logger.error("Chat error: %s", e)
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
+
+
+@app.route("/api/free_models")
+@admin_required
+def api_free_models():
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/models",
+        headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}"},
+        method="GET"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            free = [m["id"] for m in result.get("data", []) if ":free" in m["id"]]
+            return jsonify({"free_models": free})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
