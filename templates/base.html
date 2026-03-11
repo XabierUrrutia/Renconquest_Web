@@ -160,6 +160,76 @@
     .auth-links a:hover { color:var(--sand); }
     .auth-links span { margin:0 .5rem; }
 
+    /* ── MODO DÍA ─────────────────────────────────────────────────── */
+    body.day-mode {
+      background: #d8d4c0 !important;
+      --white: #1e2210 !important;
+      --sand:  #4a4e2a !important;
+      --gold:  #5a5530 !important;
+      --light: #3a3e28 !important;
+      --muted: #6a6850 !important;
+      --dark:  #d8d4c0 !important;
+      --mid:   #c8c4b0 !important;
+    }
+    body.day-mode nav {
+      background: rgba(210,205,185,.97) !important;
+      border-bottom-color: rgba(80,90,50,.25) !important;
+    }
+    body.day-mode main,
+    body.day-mode footer {
+      background: #d8d4c0 !important;
+    }
+    body.day-mode .auth-card,
+    body.day-mode .admin-wrap,
+    body.day-mode .profile-wrap,
+    body.day-mode .edit-wrap,
+    body.day-mode .rev-wrap {
+      background: transparent;
+    }
+    body.day-mode .auth-card {
+      background: rgba(200,196,175,.9) !important;
+      border-color: rgba(80,90,50,.3) !important;
+    }
+    body.day-mode .stat-card,
+    body.day-mode .rev-card,
+    body.day-mode .edit-block,
+    body.day-mode .profile-header,
+    body.day-mode .stat-pill {
+      background: rgba(200,196,175,.85) !important;
+      border-color: rgba(80,90,50,.2) !important;
+    }
+    body.day-mode .form-group input {
+      background: rgba(180,176,155,.8) !important;
+      border-color: rgba(80,90,50,.3) !important;
+      color: #1e2210 !important;
+    }
+    body.day-mode table thead tr { border-bottom-color: rgba(80,90,50,.3) !important; }
+    body.day-mode tbody tr:hover  { background: rgba(80,90,50,.08) !important; }
+    body.day-mode tbody tr        { border-bottom-color: rgba(80,90,50,.1) !important; }
+    body.day-mode .flash.success  { background: rgba(80,90,50,.2) !important; }
+    body.day-mode h1, body.day-mode h2, body.day-mode h3 { color: #1e2210 !important; }
+    body.day-mode p   { color: #3a3e28 !important; }
+    body.day-mode td  { color: #3a3e28 !important; }
+    body.day-mode footer p { color: rgba(42,46,24,.5) !important; }
+
+    /* Theme toggle button */
+    #theme-toggle {
+      background: none;
+      border: 1px solid rgba(140,127,59,.35);
+      color: #8C7F3B;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      padding: .3rem .7rem;
+      cursor: crosshair;
+      transition: background .2s, color .2s;
+    }
+    #theme-toggle:hover { background: rgba(140,127,59,.15); color: #BFBB80; }
+    body.day-mode #theme-toggle {
+      color: #2a2e18 !important;
+      border-color: rgba(80,90,50,.4) !important;
+    }
+
     /* FOOTER */
     footer {
       position:relative; z-index:1;
@@ -198,6 +268,7 @@
       <a href="{{ url_for('login') }}">Iniciar sesión</a>
       <a href="{{ url_for('register') }}">Registrarse</a>
     {% endif %}
+    <button id="theme-toggle" onclick="toggleTheme()" title="Modo día/noche">☀️ Día</button>
   </div>
 </nav>
 
@@ -222,6 +293,27 @@
   setTimeout(() => {
     document.querySelectorAll('.flash').forEach(el => el.style.opacity = '0');
   }, 3500);
+
+  // ── TEMA ──────────────────────────────────────────────────────────
+  (function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'day') {
+      document.body.classList.add('day-mode');
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = '🌙 Noche';
+    }
+  })();
+
+  function toggleTheme() {
+    const btn = document.getElementById('theme-toggle');
+    if (document.body.classList.toggle('day-mode')) {
+      localStorage.setItem('theme', 'day');
+      btn.textContent = '🌙 Noche';
+    } else {
+      localStorage.setItem('theme', 'night');
+      btn.textContent = '☀️ Día';
+    }
+  }
 </script>
 </body>
 </html>
