@@ -182,11 +182,17 @@ def send_reset_email(to_email, token):
 # ══════════════════════════════════════════════════════════════════════════════
 
 FREE_MODELS = [
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "nvidia/nemotron-3-nano-30b-a3b:free",
+    "nvidia/nemotron-nano-9b-v2:free",
+    "nvidia/nemotron-nano-12b-v2-vl:free",
+    "stepfun/step-3.5-flash:free",
+    "z-ai/glm-4.5-air:free",
     "google/gemma-3-27b-it:free",
     "google/gemma-3-12b-it:free",
     "google/gemma-3-4b-it:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
     "meta-llama/llama-3.2-3b-instruct:free",
-    "nvidia/nemotron-nano-9b-v2:free",
     "liquid/lfm-2.5-1.2b-instruct:free",
 ]
 
