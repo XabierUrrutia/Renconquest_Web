@@ -1225,7 +1225,9 @@ function chatSend() {
     chatHandle(txt);
   }
 }
-function chatHandle(text) {
+let chatHistory = [];
+
+async function chatHandle(text) {
   if (text === 'Reportar bug') {
     bugMode = true;
     document.getElementById('chat-qr').innerHTML = '';
@@ -1236,13 +1238,40 @@ function chatHandle(text) {
   }
 
   bugMode = false;
+  chatAddUser(text);
   document.getElementById('chat-qr').innerHTML = '';
-  const reply = CHAT_ANSWERS[text];
-  if (reply) {
+  document.getElementById('chat-input').disabled = true;
+  document.getElementById('chat-send').disabled = true;
+
+  chatHistory.push({ role: 'user', content: text });
+
+  // Mostrar indicador de escritura
+  const typing = document.createElement('div');
+  typing.className = 'cmsg bot';
+  typing.id = 'chat-typing';
+  typing.innerHTML = '<span style="letter-spacing:.2em;color:#6b6a4a;">···</span>';
+  document.getElementById('chat-messages').appendChild(typing);
+  chatScroll();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: chatHistory })
+    });
+    const data = await res.json();
+    typing.remove();
+    const reply = data.reply || data.error || 'Error al conectar con el asistente.';
     chatAddBot(reply);
-  } else {
-    chatAddBot('No tengo respuesta para eso. Prueba con una de las opciones o contacta con el desarrollador.');
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    typing.remove();
+    chatAddBot('Error de conexión. Revisa las <a href="#faq">preguntas frecuentes</a>.');
   }
+
+  document.getElementById('chat-input').disabled = false;
+  document.getElementById('chat-send').disabled = false;
+  document.getElementById('chat-input').focus();
   chatRenderQR(CHAT_QUICK);
 }
 async function submitBug(description) {
