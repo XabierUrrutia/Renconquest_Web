@@ -718,10 +718,10 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8")
         app.logger.error("OpenRouter API error: %s %s", e.code, body)
-        return jsonify({"error": "El asistente no está disponible ahora mismo. Inténtalo más tarde."}), 502
+        return jsonify({"error": f"Error {e.code}: {e.read().decode()}"}), 502
     except Exception as e:
         app.logger.error("Chat error: %s", e)
-        return jsonify({"error": "Error interno. Inténtalo más tarde."}), 500
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
 
 
