@@ -715,6 +715,20 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
 
+@app.route("/api/gemini_models")
+@admin_required
+def api_gemini_models():
+    if not GEMINI_API_KEY:
+        return jsonify({"error": "No API key"}), 503
+    url = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
+    req = urllib.request.Request(url, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return jsonify(json.loads(resp.read().decode("utf-8")))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, host="0.0.0.0", port=5000)
