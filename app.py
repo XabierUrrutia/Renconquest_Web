@@ -186,7 +186,7 @@ def openrouter_call(prompt, max_tokens=300):
     if not OPENROUTER_API_KEY:
         return None
     payload = json.dumps({
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "model": "qwen/qwen3-8b:free",
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": max_tokens
     }).encode("utf-8")
@@ -697,7 +697,7 @@ IMPORTANTE: Responde SOLO con el mensaje final. No muestres tu razonamiento inte
         or_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
 
     payload = json.dumps({
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "model": "qwen/qwen3-8b:free",
         "messages": or_messages,
         "max_tokens": 300
     }).encode("utf-8")
