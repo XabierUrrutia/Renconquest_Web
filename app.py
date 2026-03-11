@@ -714,7 +714,8 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode("utf-8"))
             app.logger.info("OpenRouter response: %s", json.dumps(result)[:500])
-            reply = result["choices"][0]["message"]["content"]
+            msg = result["choices"][0]["message"]
+            reply = msg.get("content") or msg.get("reasoning") or "Sin respuesta."
             return jsonify({"reply": reply})
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8")
