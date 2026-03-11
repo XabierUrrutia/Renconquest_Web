@@ -181,52 +181,31 @@ def send_reset_email(to_email, token):
 # AI HELPER
 # ══════════════════════════════════════════════════════════════════════════════
 
-FREE_MODELS = [
-    "google/gemma-3-27b-it:free",
-    "google/gemma-3-12b-it:free",
-    "google/gemma-3-4b-it:free",
-    "meta-llama/llama-3.2-3b-instruct:free",
-    "nvidia/nemotron-nano-9b-v2:free",
-    "liquid/lfm-2.5-1.2b-instruct:free",
-]
-
-def openrouter_request(messages, max_tokens=300):
+def openrouter_call(prompt, max_tokens=300):
+    """Llama a OpenRouter y devuelve el texto de respuesta o None si falla."""
     if not OPENROUTER_API_KEY:
         return None
-    for model in FREE_MODELS:
-        payload = json.dumps({
-            "model": model,
-            "messages": messages,
-            "max_tokens": max_tokens
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/chat/completions",
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}"
-            },
-            method="POST"
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                msg = result["choices"][0]["message"]
-                reply = msg.get("content") or msg.get("reasoning") or ""
-                if reply.strip():
-                    app.logger.info("OpenRouter used model: %s", model)
-                    return reply.strip()
-        except urllib.error.HTTPError as e:
-            body = e.read().decode("utf-8")
-            app.logger.warning("Model %s failed: %s", model, e.code)
-            continue
-        except Exception as e:
-            app.logger.warning("Model %s error: %s", model, e)
-            continue
-    return None
-
-def openrouter_call(prompt, max_tokens=300):
-    return openrouter_request([{"role": "user", "content": prompt}], max_tokens)
+    payload = json.dumps({
+        "model": "nousresearch/hermes-3-llama-3.1-405b:free",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": max_tokens
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+        },
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return result["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        app.logger.error("OpenRouter error: %s", e)
+        return None
 
 def review_is_clean(text):
     """Devuelve (True, None) si la reseña es válida, o (False, motivo) si no lo es."""
@@ -717,10 +696,35 @@ IMPORTANTE: Responde SOLO con el mensaje final. No muestres tu razonamiento inte
     for msg in messages:
         or_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
 
-    reply = openrouter_request(or_messages, max_tokens=300)
-    if reply:
-        return jsonify({"reply": reply})
-    return jsonify({"error": "El asistente no está disponible ahora mismo. Inténtalo más tarde."}), 503
+    payload = json.dumps({
+        "model": "nousresearch/hermes-3-llama-3.1-405b:free",
+        "messages": or_messages,
+        "max_tokens": 300
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+        },
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            app.logger.info("OpenRouter response: %s", json.dumps(result)[:500])
+            msg = result["choices"][0]["message"]
+            reply = msg.get("content") or msg.get("reasoning") or "Sin respuesta."
+            return jsonify({"reply": reply})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        app.logger.error("OpenRouter API error: %s %s", e.code, body)
+        return jsonify({"error": f"Error {e.code}: {body}"}), 502
+    except Exception as e:
+        app.logger.error("Chat error: %s", e)
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
 
 
