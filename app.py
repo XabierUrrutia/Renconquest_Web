@@ -684,15 +684,16 @@ Información clave:
 
 Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información."""
 
-    # Gemini requiere alternar user/model y que el último sea user
-    # Usamos system_instruction para el prompt del sistema
-    gemini_contents = []
+    # API v1: system prompt como primer mensaje user + model dummy
+    gemini_contents = [
+        {"role": "user",  "parts": [{"text": system_prompt}]},
+        {"role": "model", "parts": [{"text": "Entendido. Soy el asistente de Reconquest, listo para ayudar."}]},
+    ]
     for msg in messages:
         role = "model" if msg.get("role") == "assistant" else "user"
         gemini_contents.append({"role": role, "parts": [{"text": msg.get("content", "")}]})
 
     payload = json.dumps({
-        "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": gemini_contents,
         "generationConfig": {"maxOutputTokens": 300, "temperature": 0.7}
     }).encode("utf-8")
