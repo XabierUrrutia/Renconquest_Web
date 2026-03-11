@@ -186,7 +186,7 @@ def openrouter_call(prompt, max_tokens=300):
     if not OPENROUTER_API_KEY:
         return None
     payload = json.dumps({
-        "model": "google/gemma-3-4b-it:free",
+        "model": "mistralai/mistral-7b-instruct:free",
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": max_tokens
     }).encode("utf-8")
@@ -696,7 +696,7 @@ Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di 
         or_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
 
     payload = json.dumps({
-        "model": "google/gemma-3-4b-it:free",
+        "model": "mistralai/mistral-7b-instruct:free",
         "messages": or_messages,
         "max_tokens": 300
     }).encode("utf-8")
