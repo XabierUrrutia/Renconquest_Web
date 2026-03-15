@@ -162,32 +162,41 @@
 
     /* ── MODO DÍA ─────────────────────────────────────────────────── */
     body.day-mode {
-      background: #d8d4c0 !important;
+      background: #d4d0b8 !important;
       --white: #1e2210 !important;
       --sand:  #4a4e2a !important;
       --gold:  #5a5530 !important;
       --light: #3a3e28 !important;
       --muted: #6a6850 !important;
-      --dark:  #d8d4c0 !important;
-      --mid:   #c8c4b0 !important;
+      --dark:  #d4d0b8 !important;
+      --mid:   #c4c0a8 !important;
+      --ink:   #d4d0b8 !important;
     }
     body.day-mode nav {
-      background: rgba(210,205,185,.97) !important;
+      background: rgba(200,196,175,.97) !important;
       border-bottom-color: rgba(80,90,50,.25) !important;
     }
     body.day-mode main,
-    body.day-mode footer {
-      background: #d8d4c0 !important;
+    body.day-mode footer,
+    body.day-mode section,
+    body.day-mode .hero {
+      background: #d4d0b8 !important;
     }
-    body.day-mode .auth-card,
-    body.day-mode .admin-wrap,
-    body.day-mode .profile-wrap,
-    body.day-mode .edit-wrap,
-    body.day-mode .rev-wrap {
-      background: transparent;
+    /* Fondos oscuros hardcodeados en index.html */
+    body.day-mode [style*="background:rgba(26,29,15"],
+    body.day-mode [style*="background: rgba(26,29,15"],
+    body.day-mode [style*="background:rgba(10,11,7"],
+    body.day-mode [style*="background: rgba(10,11,7"],
+    body.day-mode [style*="background:rgba(10,12,8"] {
+      background: rgba(150,145,110,.3) !important;
     }
+    body.day-mode [style*="background:rgba(87,101,51"],
+    body.day-mode [style*="background: rgba(87,101,51"] {
+      background: rgba(120,115,80,.25) !important;
+    }
+    /* Cards y bloques */
     body.day-mode .auth-card {
-      background: rgba(200,196,175,.9) !important;
+      background: rgba(195,190,165,.92) !important;
       border-color: rgba(80,90,50,.3) !important;
     }
     body.day-mode .stat-card,
@@ -195,22 +204,45 @@
     body.day-mode .edit-block,
     body.day-mode .profile-header,
     body.day-mode .stat-pill {
-      background: rgba(200,196,175,.85) !important;
+      background: rgba(195,190,165,.85) !important;
       border-color: rgba(80,90,50,.2) !important;
     }
     body.day-mode .form-group input {
-      background: rgba(180,176,155,.8) !important;
+      background: rgba(175,170,148,.8) !important;
       border-color: rgba(80,90,50,.3) !important;
       color: #1e2210 !important;
     }
+    /* Textos */
+    body.day-mode h1, body.day-mode h2, body.day-mode h3 { color: #1e2210 !important; }
+    body.day-mode p   { color: #3a3e28 !important; }
+    body.day-mode td  { color: #3a3e28 !important; }
+    body.day-mode span { color: #3a3e28 !important; }
+    body.day-mode a   { color: #4a4e30 !important; }
+    body.day-mode a:hover { color: #1e2210 !important; }
+    body.day-mode footer p { color: rgba(42,46,24,.5) !important; }
+    /* Elementos con colores hardcodeados */
+    body.day-mode [style*="color:#BFBB80"],
+    body.day-mode [style*="color: #BFBB80"] { color: #3a3820 !important; }
+    body.day-mode [style*="color:#8C7F3B"],
+    body.day-mode [style*="color: #8C7F3B"] { color: #5a5530 !important; }
+    body.day-mode [style*="color:#BFBB80;"] { color: #3a3820 !important; }
+    body.day-mode [style*="color:#eeecd4"] { color: #1e2210 !important; }
+    body.day-mode [style*="color:#a09e7a"] { color: #4a4830 !important; }
+    body.day-mode [style*="color:#6b6a4a"] { color: #5a5840 !important; }
+    /* Tablas */
     body.day-mode table thead tr { border-bottom-color: rgba(80,90,50,.3) !important; }
     body.day-mode tbody tr:hover  { background: rgba(80,90,50,.08) !important; }
     body.day-mode tbody tr        { border-bottom-color: rgba(80,90,50,.1) !important; }
     body.day-mode .flash.success  { background: rgba(80,90,50,.2) !important; }
-    body.day-mode h1, body.day-mode h2, body.day-mode h3 { color: #1e2210 !important; }
-    body.day-mode p   { color: #3a3e28 !important; }
-    body.day-mode td  { color: #3a3e28 !important; }
-    body.day-mode footer p { color: rgba(42,46,24,.5) !important; }
+    /* Chatbot */
+    body.day-mode #chat-window  { background: #c4c0a8 !important; }
+    body.day-mode .chat-header  { background: #b4b098 !important; }
+    body.day-mode #chat-messages { background: #c4c0a8 !important; }
+    body.day-mode .cmsg.bot  { background: #b4b098 !important; color: #1e2210 !important; }
+    body.day-mode .cmsg.user { background: #a4a088 !important; color: #1e2210 !important; }
+    body.day-mode #chat-input { background: #b4b098 !important; color: #1e2210 !important; border-color: rgba(80,90,50,.3) !important; }
+    body.day-mode #chat-send  { background: #6a7040 !important; color: #d4d0b8 !important; }
+    body.day-mode .chat-qr-btn { background: rgba(100,105,65,.2) !important; color: #3a3e28 !important; border-color: rgba(80,90,50,.3) !important; }
 
     /* Theme toggle button */
     #theme-toggle {

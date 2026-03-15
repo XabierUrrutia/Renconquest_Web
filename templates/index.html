@@ -56,127 +56,6 @@
     }
 
     /* ── NAV ──────────────────────────────────────────────── */
-    /* ── MODO DÍA ─────────────────────────────────────────────────── */
-    body.day-mode {
-      background: #d8d4c0 !important;
-      --white: #1e2210 !important;
-      --sand:  #4a4e2a !important;
-      --gold:  #5a5530 !important;
-      --light: #3a3e28 !important;
-      --muted: #6a6850 !important;
-    }
-    body.day-mode nav {
-      background: rgba(210,205,185,.97) !important;
-      border-bottom-color: rgba(80,90,50,.25) !important;
-    }
-    body.day-mode section,
-    body.day-mode .hero,
-    body.day-mode footer {
-      background: #d8d4c0 !important;
-    }
-    /* Fondos de cards y elementos con fondo oscuro */
-    body.day-mode [style*="background:rgba(26,29,15"],
-    body.day-mode [style*="background: rgba(26,29,15"],
-    body.day-mode [style*="background:rgba(10,11,7"],
-    body.day-mode [style*="background: rgba(10,11,7"],
-    body.day-mode [style*="background:rgba(87,101,51"],
-    body.day-mode [style*="background: rgba(87,101,51"] {
-      background: rgba(160,155,120,.35) !important;
-    }
-    /* Textos */
-    body.day-mode { color: #2a2e18 !important; }
-    body.day-mode h1, body.day-mode h2, body.day-mode h3 { color: #1e2210 !important; }
-    body.day-mode p { color: #3a3e28 !important; }
-    body.day-mode span { color: #3a3e28 !important; }
-    body.day-mode a { color: #4a4e30 !important; }
-    body.day-mode a:hover { color: #1e2210 !important; }
-    /* Botón descargar y elementos con color dorado */
-    body.day-mode [style*="color:#BFBB80"],
-    body.day-mode [style*="color: #BFBB80"] { color: #3a3820 !important; }
-    body.day-mode [style*="color:#8C7F3B"],
-    body.day-mode [style*="color: #8C7F3B"] { color: #5a5530 !important; }
-    body.day-mode [style*="color:var(--muted)"],
-    body.day-mode [style*="color: var(--muted)"] { color: #6a6850 !important; }
-    /* Chatbot */
-    body.day-mode #chat-window { background: #ccc8b0 !important; }
-    body.day-mode .chat-header { background: #bab690 !important; }
-    body.day-mode #chat-messages { background: #ccc8b0 !important; }
-    body.day-mode .cmsg.bot { background: #bab690 !important; color: #2a2e18 !important; }
-    body.day-mode .cmsg.user { background: #aaa880 !important; color: #2a2e18 !important; }
-    body.day-mode #chat-input { background: #bab690 !important; color: #2a2e18 !important; border-color: rgba(80,90,50,.3) !important; }
-    body.day-mode #chat-send { background: #6a7040 !important; color: #d8d4c0 !important; }
-    body.day-mode #theme-toggle { color: #2a2e18 !important; border-color: rgba(80,90,50,.4) !important; }
-
-    /* Hero title y tagline */
-    body.day-mode .hero-title  { color: #1e2210 !important; }
-    body.day-mode .hero-title .accent { color: #4a4e2a !important; }
-    body.day-mode .hero-tagline { color: #5a5e40 !important; }
-    body.day-mode .hero-eyebrow { color: #5a5530 !important; }
-    body.day-mode .hero-bg {
-      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(140,150,90,.2) 0%, transparent 65%),
-                  #d8d4c0 !important;
-    }
-
-    /* FAQ */
-    body.day-mode .faq-q       { color: #2a2e18 !important; }
-    body.day-mode .faq-q:hover { color: #1e2210 !important; }
-    body.day-mode .faq-icon    { color: #5a5530 !important; }
-    body.day-mode .faq-a p     { color: #4a4e38 !important; }
-    body.day-mode .faq-item    { border-bottom-color: rgba(80,90,50,.2) !important; }
-    body.day-mode .faq-item.open .faq-q { color: #1e2210 !important; }
-
-    /* Section headers y section-tag */
-    body.day-mode .section-header h2 { color: #3a3e20 !important; }
-    body.day-mode .section-tag        { color: #5a5530 !important; }
-
-    /* Features cards */
-    body.day-mode .feature     { background: rgba(170,165,130,.4) !important; border-color: rgba(80,90,50,.2) !important; }
-    body.day-mode .feature h3  { color: #2a2e18 !important; }
-    body.day-mode .feature-num { color: #5a5530 !important; }
-
-    /* About section */
-    body.day-mode .about-wrap  { background: rgba(180,175,145,.4) !important; }
-    body.day-mode .about-label { color: #1e2210 !important; }
-    body.day-mode .about-label em { color: #4a4e2a !important; }
-    body.day-mode .about-body strong { color: #1e2210 !important; }
-
-    /* Install steps */
-    body.day-mode .step        { border-bottom-color: rgba(80,90,50,.2) !important; }
-    body.day-mode .step-n      { color: #5a5530 !important; }
-    body.day-mode .step-body h3 { color: #2a2e18 !important; }
-    body.day-mode code         { background: rgba(100,110,60,.15) !important; color: #3a3e20 !important; border-color: rgba(80,90,50,.3) !important; }
-    body.day-mode .req-item    { background: rgba(170,165,130,.4) !important; }
-    body.day-mode .req-item dt { color: #5a5530 !important; }
-    body.day-mode .req-item dd { color: #2a2e18 !important; }
-
-    /* Download block */
-    body.day-mode .download-meta { color: #5a5e40 !important; }
-    body.day-mode .download-meta span { color: #4a4820 !important; }
-    body.day-mode .counter-badge { border-color: rgba(80,90,50,.3) !important; background: rgba(100,110,60,.1) !important; }
-    body.day-mode .counter-badge .num { color: #3a3e20 !important; }
-
-    /* Reviews section */
-    body.day-mode #resenas     { background: rgba(175,170,138,.3) !important; border-color: rgba(80,90,50,.15) !important; }
-
-    /* Nav links hardcodeados */
-    body.day-mode nav a        { color: #4a4e30 !important; }
-    body.day-mode nav a:hover  { color: #1e2210 !important; }
-
-    /* Version tag y footer */
-    body.day-mode .version-tag { color: #5a5530 !important; border-color: rgba(80,90,50,.3) !important; }
-
-    #theme-toggle {
-      background: none;
-      border: 1px solid rgba(140,127,59,.35);
-      color: #8C7F3B;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: .72rem;
-      letter-spacing: .12em;
-      padding: .3rem .7rem;
-      cursor: crosshair;
-      transition: background .2s, color .2s;
-    }
-    #theme-toggle:hover { background: rgba(140,127,59,.15); color: #BFBB80; }
 
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -628,7 +507,6 @@
       <a href="/login"    style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#6b6a4a;text-decoration:none;">Login</a>
       <a href="/register" style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#BFBB80;text-decoration:none;border:1px solid rgba(140,127,59,.35);padding:.3rem .8rem;">Registro</a>
     {% endif %}
-    <button id="theme-toggle" onclick="toggleTheme()" title="Modo día/noche">☀️ Día</button>
   </div>
 </nav>
 
@@ -1348,27 +1226,6 @@ function chatSend() {
     chatHandle(txt);
   }
 }
-// ── TEMA ──────────────────────────────────────────────────────────
-(function() {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'day') {
-    document.body.classList.add('day-mode');
-    const btn = document.getElementById('theme-toggle');
-    if (btn) btn.textContent = '🌙 Noche';
-  }
-})();
-
-function toggleTheme() {
-  const btn = document.getElementById('theme-toggle');
-  if (document.body.classList.toggle('day-mode')) {
-    localStorage.setItem('theme', 'day');
-    btn.textContent = '🌙 Noche';
-  } else {
-    localStorage.setItem('theme', 'night');
-    btn.textContent = '☀️ Día';
-  }
-}
-
 let chatHistory = [];
 
 async function chatHandle(text) {
