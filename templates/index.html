@@ -43,7 +43,9 @@
         rgba(0,0,0,.08) 2px,
         rgba(0,0,0,.08) 4px
       );
+      transition: opacity .3s;
     }
+    body.day-mode::before { opacity: 0.15 !important; }
 
     /* ── PIXEL GRID BG ───────────────────────────────────── */
     body::after {
@@ -83,9 +85,17 @@
       background: rgba(200,196,175,.97) !important;
       border-bottom-color: rgba(80,90,50,.25) !important;
     }
-    body.day-mode section, body.day-mode .hero, body.day-mode footer {
+    body.day-mode section, body.day-mode footer {
       background: #d4d0b8 !important;
     }
+    body.day-mode .hero { background: #d4d0b8 !important; }
+    body.day-mode .hero-bg {
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(140,135,90,.15) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(160,150,80,.08) 0%, transparent 60%),
+        #d4d0b8 !important;
+    }
+    body.day-mode body::before { opacity: 0.3; }
     body.day-mode [style*="background:rgba(26,29,15"],
     body.day-mode [style*="background:rgba(10,11,7"],
     body.day-mode [style*="background:rgba(10,12,8"] {
@@ -885,6 +895,14 @@
   .faq-item.open .faq-a { max-height:200px; }
   .faq-item.open .faq-icon { transform:rotate(45deg); }
   .faq-item.open .faq-q { color:#BFBB80; }
+
+  body.day-mode .faq-q { color: #1e2210 !important; }
+  body.day-mode .faq-q:hover { color: #3a3e20 !important; }
+  body.day-mode .faq-item.open .faq-q { color: #3a3e20 !important; }
+  body.day-mode .faq-a p { color: #3a3e28 !important; }
+  body.day-mode .faq-a strong { color: #2a2e18 !important; }
+  body.day-mode .faq-icon { color: #5a5530 !important; }
+  body.day-mode .faq-item { border-bottom-color: rgba(80,90,50,.2) !important; }
 </style>
 
 <!-- REVIEWS -->
