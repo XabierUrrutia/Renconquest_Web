@@ -1203,7 +1203,13 @@ let chatOpen = false;
 let bugMode = false;
 const userLoggedIn = {{ 'true' if user else 'false' }};
 
+function setInputVisible(visible) {
+  const row = document.querySelector('.chat-input-row');
+  if (row) row.style.display = visible ? 'flex' : 'none';
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+  setInputVisible(false);
   chatAddBot('¡Hola, Comandante! 👋 Soy el asistente de <strong>Reconquest</strong>. ¿En qué puedo ayudarte?');
   chatRenderQR(CHAT_QUICK);
   setTimeout(() => {
@@ -1263,25 +1269,46 @@ function chatSend() {
 }
 let chatHistory = [];
 
+const BUG_OPTIONS = [
+  'El juego se cierra inesperadamente',
+  'Problema con gráficos o pantalla',
+  'Las tropas no responden',
+  'Error al iniciar el juego',
+  'Problema con el instalador',
+  'Otro problema',
+];
+
 async function chatHandle(text) {
   if (text === 'Reportar bug') {
-    bugMode = true;
     document.getElementById('chat-qr').innerHTML = '';
-    chatAddBot('Describe el bug con el mayor detalle posible y pulsa enviar. Incluye qué estabas haciendo cuando ocurrió.');
-    document.getElementById('chat-input').placeholder = 'Describe el bug...';
-    document.getElementById('chat-input').focus();
+    chatAddBot('¿Cuál es el problema? Selecciona una opción:');
+    chatRenderQR(BUG_OPTIONS);
+    return;
+  }
+
+  if (BUG_OPTIONS.includes(text)) {
+    if (text === 'Otro problema') {
+      bugMode = true;
+      document.getElementById('chat-qr').innerHTML = '';
+      chatAddBot('Descríbenos el problema con tus propias palabras:');
+      setInputVisible(true);
+      document.getElementById('chat-input').placeholder = 'Describe el problema...';
+      document.getElementById('chat-input').focus();
+    } else {
+      await submitBug(text);
+    }
     return;
   }
 
   bugMode = false;
   chatAddUser(text);
+  setInputVisible(true);
   document.getElementById('chat-qr').innerHTML = '';
   document.getElementById('chat-input').disabled = true;
   document.getElementById('chat-send').disabled = true;
 
   chatHistory.push({ role: 'user', content: text });
 
-  // Mostrar indicador de escritura
   const typing = document.createElement('div');
   typing.className = 'cmsg bot';
   typing.id = 'chat-typing';
@@ -1307,12 +1334,14 @@ async function chatHandle(text) {
 
   document.getElementById('chat-input').disabled = false;
   document.getElementById('chat-send').disabled = false;
-  document.getElementById('chat-input').focus();
+  setInputVisible(false);
   chatRenderQR(CHAT_QUICK);
 }
+
 async function submitBug(description) {
   bugMode = false;
   document.getElementById('chat-input').placeholder = 'Escribe tu pregunta...';
+  document.getElementById('chat-qr').innerHTML = '';
   document.getElementById('chat-input').disabled = true;
   document.getElementById('chat-send').disabled = true;
 
@@ -1334,7 +1363,7 @@ async function submitBug(description) {
 
   document.getElementById('chat-input').disabled = false;
   document.getElementById('chat-send').disabled = false;
-  document.getElementById('chat-input').focus();
+  setInputVisible(false);
   chatRenderQR(CHAT_QUICK);
 }
 </script>
