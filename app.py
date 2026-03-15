@@ -185,15 +185,12 @@ FREE_MODELS = [
     "nvidia/nemotron-3-super-120b-a12b:free",
     "nvidia/nemotron-3-nano-30b-a3b:free",
     "nvidia/nemotron-nano-9b-v2:free",
-    "nvidia/nemotron-nano-12b-v2-vl:free",
     "stepfun/step-3.5-flash:free",
-    "z-ai/glm-4.5-air:free",
     "google/gemma-3-27b-it:free",
     "google/gemma-3-12b-it:free",
     "google/gemma-3-4b-it:free",
     "meta-llama/llama-3.3-70b-instruct:free",
     "meta-llama/llama-3.2-3b-instruct:free",
-    "liquid/lfm-2.5-1.2b-instruct:free",
 ]
 
 def openrouter_request(messages, max_tokens=300):
@@ -717,7 +714,7 @@ Información clave:
 - Para recuperar contraseña: ir a /forgot en la web
 
 Responde siempre en español, de forma concisa y amigable. Si no sabes algo, di que contacten con el desarrollador. No inventes información.
-IMPORTANTE: Responde SOLO con el mensaje final. No muestres tu razonamiento interno, ni pasos previos, ni texto entre asteriscos. Solo la respuesta directa."""
+IMPORTANTE: Responde SOLO con el mensaje final en español. No muestres razonamiento interno, pasos previos, texto entre asteriscos ni etiquetas. Solo la respuesta directa y concisa, sin formato markdown."""
 
     or_messages = [{"role": "system", "content": system_prompt}]
     for msg in messages:
