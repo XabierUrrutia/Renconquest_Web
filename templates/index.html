@@ -57,6 +57,19 @@
 
     /* ── NAV ──────────────────────────────────────────────── */
 
+    #theme-toggle {
+      background: none;
+      border: 1px solid rgba(140,127,59,.35);
+      color: #8C7F3B;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      padding: .3rem .7rem;
+      cursor: crosshair;
+      transition: background .2s, color .2s;
+    }
+    #theme-toggle:hover { background: rgba(140,127,59,.15); color: #BFBB80; }
+
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
@@ -499,6 +512,7 @@
     <li><a href="#instalar">Instalar</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:1.2rem;">
+    <button id="theme-toggle" onclick="toggleTheme()" title="Modo día/noche">☀️ Día</button>
     {% if user %}
       <span style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;color:#8C7F3B;">// {{ user['username'] }}</span>
       {% if user['is_admin'] %}<a href="/admin" style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#BFBB80;text-decoration:none;border:1px solid rgba(140,127,59,.35);padding:.3rem .8rem;">Admin</a>{% endif %}
@@ -1163,6 +1177,27 @@ const CHAT_ANSWERS = {
   'Requisitos': 'Requisitos mínimos:<br>• <strong>SO:</strong> Windows 10/11 (64-bit)<br>• <strong>RAM:</strong> 4 GB<br>• <strong>GPU:</strong> DirectX 11<br>• <strong>Disco:</strong> ~500 MB libres',
   'Olvidé contraseña': 'Para recuperar tu contraseña ve a <a href="/forgot" style="color:#BFBB80;">/forgot</a> e introduce tu email. Te enviaremos un enlace de recuperación.',
 };
+
+// ── TEMA ──────────────────────────────────────────────────────────
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'day') {
+    document.body.classList.add('day-mode');
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = '🌙 Noche';
+  }
+})();
+
+function toggleTheme() {
+  const btn = document.getElementById('theme-toggle');
+  if (document.body.classList.toggle('day-mode')) {
+    localStorage.setItem('theme', 'day');
+    btn.textContent = '🌙 Noche';
+  } else {
+    localStorage.setItem('theme', 'night');
+    btn.textContent = '☀️ Día';
+  }
+}
 
 let chatOpen = false;
 let bugMode = false;
