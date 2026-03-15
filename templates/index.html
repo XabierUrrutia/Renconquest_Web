@@ -70,6 +70,48 @@
     }
     #theme-toggle:hover { background: rgba(140,127,59,.15); color: #BFBB80; }
 
+    /* ── MODO DÍA ─────────────────────────────────────────────────── */
+    body.day-mode {
+      background: #d4d0b8 !important;
+      --white: #1e2210 !important;
+      --sand:  #4a4e2a !important;
+      --gold:  #5a5530 !important;
+      --light: #3a3e28 !important;
+      --muted: #6a6850 !important;
+    }
+    body.day-mode nav {
+      background: rgba(200,196,175,.97) !important;
+      border-bottom-color: rgba(80,90,50,.25) !important;
+    }
+    body.day-mode section, body.day-mode .hero, body.day-mode footer {
+      background: #d4d0b8 !important;
+    }
+    body.day-mode [style*="background:rgba(26,29,15"],
+    body.day-mode [style*="background:rgba(10,11,7"],
+    body.day-mode [style*="background:rgba(10,12,8"] {
+      background: rgba(150,145,110,.3) !important;
+    }
+    body.day-mode [style*="background:rgba(87,101,51"] {
+      background: rgba(120,115,80,.25) !important;
+    }
+    body.day-mode h1, body.day-mode h2, body.day-mode h3 { color: #1e2210 !important; }
+    body.day-mode p   { color: #3a3e28 !important; }
+    body.day-mode span { color: #3a3e28 !important; }
+    body.day-mode a   { color: #4a4e30 !important; }
+    body.day-mode [style*="color:#BFBB80"] { color: #3a3820 !important; }
+    body.day-mode [style*="color:#8C7F3B"] { color: #5a5530 !important; }
+    body.day-mode [style*="color:#a09e7a"] { color: #4a4830 !important; }
+    body.day-mode [style*="color:#6b6a4a"] { color: #5a5840 !important; }
+    body.day-mode #chat-window  { background: #c4c0a8 !important; }
+    body.day-mode .chat-header  { background: #b4b098 !important; }
+    body.day-mode #chat-messages { background: #c4c0a8 !important; }
+    body.day-mode .cmsg.bot  { background: #b4b098 !important; color: #1e2210 !important; }
+    body.day-mode .cmsg.user { background: #a4a088 !important; color: #1e2210 !important; }
+    body.day-mode #chat-input { background: #b4b098 !important; color: #1e2210 !important; }
+    body.day-mode #chat-send  { background: #6a7040 !important; color: #d4d0b8 !important; }
+    body.day-mode .chat-qr-btn { background: rgba(100,105,65,.2) !important; color: #3a3e28 !important; }
+    body.day-mode #theme-toggle { color: #2a2e18 !important; border-color: rgba(80,90,50,.4) !important; }
+
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
@@ -1203,13 +1245,7 @@ let chatOpen = false;
 let bugMode = false;
 const userLoggedIn = {{ 'true' if user else 'false' }};
 
-function setInputVisible(visible) {
-  const row = document.querySelector('.chat-input-row');
-  if (row) row.style.display = visible ? 'flex' : 'none';
-}
-
 window.addEventListener('DOMContentLoaded', () => {
-  setInputVisible(false);
   chatAddBot('¡Hola, Comandante! 👋 Soy el asistente de <strong>Reconquest</strong>. ¿En qué puedo ayudarte?');
   chatRenderQR(CHAT_QUICK);
   setTimeout(() => {
@@ -1291,18 +1327,17 @@ async function chatHandle(text) {
       bugMode = true;
       document.getElementById('chat-qr').innerHTML = '';
       chatAddBot('Descríbenos el problema con tus propias palabras:');
-      setInputVisible(true);
       document.getElementById('chat-input').placeholder = 'Describe el problema...';
       document.getElementById('chat-input').focus();
     } else {
-      await submitBug(text);
+      // Enviar a la IA con prompt de soporte técnico
+      await chatHandleBug(text);
     }
     return;
   }
 
   bugMode = false;
   chatAddUser(text);
-  setInputVisible(true);
   document.getElementById('chat-qr').innerHTML = '';
   document.getElementById('chat-input').disabled = true;
   document.getElementById('chat-send').disabled = true;
@@ -1334,7 +1369,49 @@ async function chatHandle(text) {
 
   document.getElementById('chat-input').disabled = false;
   document.getElementById('chat-send').disabled = false;
-  setInputVisible(false);
+  chatRenderQR(CHAT_QUICK);
+}
+
+async function chatHandleBug(bugType) {
+  chatAddUser(bugType);
+  document.getElementById('chat-qr').innerHTML = '';
+  document.getElementById('chat-input').disabled = true;
+  document.getElementById('chat-send').disabled = true;
+
+  const typing = document.createElement('div');
+  typing.className = 'cmsg bot';
+  typing.innerHTML = '<span style="letter-spacing:.2em;color:#6b6a4a;">···</span>';
+  document.getElementById('chat-messages').appendChild(typing);
+  chatScroll();
+
+  const bugMessages = [
+    { role: 'user', content: `Soy el asistente de soporte de Reconquest. El jugador tiene el siguiente problema: "${bugType}". Dame consejos concretos para solucionarlo. El juego es un RTS para Windows 10/11 64-bit hecho con Unity 6. Responde en español, de forma concisa y amigable, sin razonamiento interno.` }
+  ];
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: bugMessages })
+    });
+    const data = await res.json();
+    typing.remove();
+    const reply = data.reply || data.error || 'No se pudo obtener ayuda en este momento.';
+    chatAddBot(reply);
+    // Guardar el bug en el panel admin
+    await fetch('/api/bug', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: bugType })
+    });
+  } catch(e) {
+    typing.remove();
+    chatAddBot('Error de conexión. Inténtalo más tarde.');
+  }
+
+  document.getElementById('chat-input').disabled = false;
+  document.getElementById('chat-send').disabled = false;
+  document.getElementById('chat-input').focus();
   chatRenderQR(CHAT_QUICK);
 }
 
@@ -1363,7 +1440,6 @@ async function submitBug(description) {
 
   document.getElementById('chat-input').disabled = false;
   document.getElementById('chat-send').disabled = false;
-  setInputVisible(false);
   chatRenderQR(CHAT_QUICK);
 }
 </script>
