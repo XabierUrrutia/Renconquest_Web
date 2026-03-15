@@ -43,9 +43,7 @@
         rgba(0,0,0,.08) 2px,
         rgba(0,0,0,.08) 4px
       );
-      transition: opacity .3s;
     }
-    body.day-mode::before { opacity: 0.15 !important; }
 
     /* ── PIXEL GRID BG ───────────────────────────────────── */
     body::after {
@@ -58,29 +56,114 @@
     }
 
     /* ── NAV ──────────────────────────────────────────────── */
+    /* ── MODO DÍA ─────────────────────────────────────────────────── */
+    body.day-mode {
+      background: #d8d4c0 !important;
+      --white: #1e2210 !important;
+      --sand:  #4a4e2a !important;
+      --gold:  #5a5530 !important;
+      --light: #3a3e28 !important;
+      --muted: #6a6850 !important;
+    }
+    body.day-mode nav {
+      background: rgba(210,205,185,.97) !important;
+      border-bottom-color: rgba(80,90,50,.25) !important;
+    }
+    body.day-mode section,
+    body.day-mode .hero,
+    body.day-mode footer {
+      background: #d8d4c0 !important;
+    }
+    /* Fondos de cards y elementos con fondo oscuro */
+    body.day-mode [style*="background:rgba(26,29,15"],
+    body.day-mode [style*="background: rgba(26,29,15"],
+    body.day-mode [style*="background:rgba(10,11,7"],
+    body.day-mode [style*="background: rgba(10,11,7"],
+    body.day-mode [style*="background:rgba(87,101,51"],
+    body.day-mode [style*="background: rgba(87,101,51"] {
+      background: rgba(160,155,120,.35) !important;
+    }
+    /* Textos */
+    body.day-mode { color: #2a2e18 !important; }
+    body.day-mode h1, body.day-mode h2, body.day-mode h3 { color: #1e2210 !important; }
+    body.day-mode p { color: #3a3e28 !important; }
+    body.day-mode span { color: #3a3e28 !important; }
+    body.day-mode a { color: #4a4e30 !important; }
+    body.day-mode a:hover { color: #1e2210 !important; }
+    /* Botón descargar y elementos con color dorado */
+    body.day-mode [style*="color:#BFBB80"],
+    body.day-mode [style*="color: #BFBB80"] { color: #3a3820 !important; }
+    body.day-mode [style*="color:#8C7F3B"],
+    body.day-mode [style*="color: #8C7F3B"] { color: #5a5530 !important; }
+    body.day-mode [style*="color:var(--muted)"],
+    body.day-mode [style*="color: var(--muted)"] { color: #6a6850 !important; }
+    /* Chatbot */
+    body.day-mode #chat-window { background: #ccc8b0 !important; }
+    body.day-mode .chat-header { background: #bab690 !important; }
+    body.day-mode #chat-messages { background: #ccc8b0 !important; }
+    body.day-mode .cmsg.bot { background: #bab690 !important; color: #2a2e18 !important; }
+    body.day-mode .cmsg.user { background: #aaa880 !important; color: #2a2e18 !important; }
+    body.day-mode #chat-input { background: #bab690 !important; color: #2a2e18 !important; border-color: rgba(80,90,50,.3) !important; }
+    body.day-mode #chat-send { background: #6a7040 !important; color: #d8d4c0 !important; }
+    body.day-mode #theme-toggle { color: #2a2e18 !important; border-color: rgba(80,90,50,.4) !important; }
 
-    /* ── FLASH MESSAGES ──────────────────────────────── */
-    .flash-wrap {
-      position: fixed; top: 5rem; left: 50%; transform: translateX(-50%);
-      z-index: 9999; display: flex; flex-direction: column; gap: .5rem;
-      min-width: 320px; max-width: 600px; pointer-events: none;
+    /* Hero title y tagline */
+    body.day-mode .hero-title  { color: #1e2210 !important; }
+    body.day-mode .hero-title .accent { color: #4a4e2a !important; }
+    body.day-mode .hero-tagline { color: #5a5e40 !important; }
+    body.day-mode .hero-eyebrow { color: #5a5530 !important; }
+    body.day-mode .hero-bg {
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(140,150,90,.2) 0%, transparent 65%),
+                  #d8d4c0 !important;
     }
-    .flash {
-      padding: .9rem 1.5rem;
-      font-family: 'Share Tech Mono', monospace; font-size: .78rem;
-      letter-spacing: .08em; line-height: 1.5; text-align: center;
-      border: 1px solid; pointer-events: all;
-      animation: flashIn .3s ease;
-    }
-    .flash.error   { background: rgba(100,20,20,.95); border-color: rgba(200,80,80,.5); color: #f0a0a0; }
-    .flash.success { background: rgba(20,50,20,.95);  border-color: rgba(80,180,80,.4); color: #90d090; }
-    .flash.warning { background: rgba(70,55,10,.95);  border-color: rgba(200,170,50,.4); color: #e0c860; }
-    @keyframes flashIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    body.day-mode .flash.error   { background: rgba(180,50,50,.9) !important; color: #fff !important; }
-    body.day-mode .flash.success { background: rgba(50,100,50,.9) !important; color: #fff !important; }
+
+    /* FAQ */
+    body.day-mode .faq-q       { color: #2a2e18 !important; }
+    body.day-mode .faq-q:hover { color: #1e2210 !important; }
+    body.day-mode .faq-icon    { color: #5a5530 !important; }
+    body.day-mode .faq-a p     { color: #4a4e38 !important; }
+    body.day-mode .faq-item    { border-bottom-color: rgba(80,90,50,.2) !important; }
+    body.day-mode .faq-item.open .faq-q { color: #1e2210 !important; }
+
+    /* Section headers y section-tag */
+    body.day-mode .section-header h2 { color: #3a3e20 !important; }
+    body.day-mode .section-tag        { color: #5a5530 !important; }
+
+    /* Features cards */
+    body.day-mode .feature     { background: rgba(170,165,130,.4) !important; border-color: rgba(80,90,50,.2) !important; }
+    body.day-mode .feature h3  { color: #2a2e18 !important; }
+    body.day-mode .feature-num { color: #5a5530 !important; }
+
+    /* About section */
+    body.day-mode .about-wrap  { background: rgba(180,175,145,.4) !important; }
+    body.day-mode .about-label { color: #1e2210 !important; }
+    body.day-mode .about-label em { color: #4a4e2a !important; }
+    body.day-mode .about-body strong { color: #1e2210 !important; }
+
+    /* Install steps */
+    body.day-mode .step        { border-bottom-color: rgba(80,90,50,.2) !important; }
+    body.day-mode .step-n      { color: #5a5530 !important; }
+    body.day-mode .step-body h3 { color: #2a2e18 !important; }
+    body.day-mode code         { background: rgba(100,110,60,.15) !important; color: #3a3e20 !important; border-color: rgba(80,90,50,.3) !important; }
+    body.day-mode .req-item    { background: rgba(170,165,130,.4) !important; }
+    body.day-mode .req-item dt { color: #5a5530 !important; }
+    body.day-mode .req-item dd { color: #2a2e18 !important; }
+
+    /* Download block */
+    body.day-mode .download-meta { color: #5a5e40 !important; }
+    body.day-mode .download-meta span { color: #4a4820 !important; }
+    body.day-mode .counter-badge { border-color: rgba(80,90,50,.3) !important; background: rgba(100,110,60,.1) !important; }
+    body.day-mode .counter-badge .num { color: #3a3e20 !important; }
+
+    /* Reviews section */
+    body.day-mode #resenas     { background: rgba(175,170,138,.3) !important; border-color: rgba(80,90,50,.15) !important; }
+
+    /* Nav links hardcodeados */
+    body.day-mode nav a        { color: #4a4e30 !important; }
+    body.day-mode nav a:hover  { color: #1e2210 !important; }
+
+    /* Version tag y footer */
+    body.day-mode .version-tag { color: #5a5530 !important; border-color: rgba(80,90,50,.3) !important; }
 
     #theme-toggle {
       background: none;
@@ -94,56 +177,6 @@
       transition: background .2s, color .2s;
     }
     #theme-toggle:hover { background: rgba(140,127,59,.15); color: #BFBB80; }
-
-    /* ── MODO DÍA ─────────────────────────────────────────────────── */
-    body.day-mode {
-      background: #d4d0b8 !important;
-      --white: #1e2210 !important;
-      --sand:  #4a4e2a !important;
-      --gold:  #5a5530 !important;
-      --light: #3a3e28 !important;
-      --muted: #6a6850 !important;
-    }
-    body.day-mode nav {
-      background: rgba(200,196,175,.97) !important;
-      border-bottom-color: rgba(80,90,50,.25) !important;
-    }
-    body.day-mode section, body.day-mode footer {
-      background: #d4d0b8 !important;
-    }
-    body.day-mode .hero { background: #d4d0b8 !important; }
-    body.day-mode .hero-bg {
-      background:
-        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(140,135,90,.15) 0%, transparent 65%),
-        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(160,150,80,.08) 0%, transparent 60%),
-        #d4d0b8 !important;
-    }
-    body.day-mode body::before { opacity: 0.3; }
-    body.day-mode [style*="background:rgba(26,29,15"],
-    body.day-mode [style*="background:rgba(10,11,7"],
-    body.day-mode [style*="background:rgba(10,12,8"] {
-      background: rgba(150,145,110,.3) !important;
-    }
-    body.day-mode [style*="background:rgba(87,101,51"] {
-      background: rgba(120,115,80,.25) !important;
-    }
-    body.day-mode h1, body.day-mode h2, body.day-mode h3 { color: #1e2210 !important; }
-    body.day-mode p   { color: #3a3e28 !important; }
-    body.day-mode span { color: #3a3e28 !important; }
-    body.day-mode a   { color: #4a4e30 !important; }
-    body.day-mode [style*="color:#BFBB80"] { color: #3a3820 !important; }
-    body.day-mode [style*="color:#8C7F3B"] { color: #5a5530 !important; }
-    body.day-mode [style*="color:#a09e7a"] { color: #4a4830 !important; }
-    body.day-mode [style*="color:#6b6a4a"] { color: #5a5840 !important; }
-    body.day-mode #chat-window  { background: #c4c0a8 !important; }
-    body.day-mode .chat-header  { background: #b4b098 !important; }
-    body.day-mode #chat-messages { background: #c4c0a8 !important; }
-    body.day-mode .cmsg.bot  { background: #b4b098 !important; color: #1e2210 !important; }
-    body.day-mode .cmsg.user { background: #a4a088 !important; color: #1e2210 !important; }
-    body.day-mode #chat-input { background: #b4b098 !important; color: #1e2210 !important; }
-    body.day-mode #chat-send  { background: #6a7040 !important; color: #d4d0b8 !important; }
-    body.day-mode .chat-qr-btn { background: rgba(100,105,65,.2) !important; color: #3a3e28 !important; }
-    body.day-mode #theme-toggle { color: #2a2e18 !important; border-color: rgba(80,90,50,.4) !important; }
 
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -566,6 +599,22 @@
       animation: none;
     }
 
+    /* ── FLASH MESSAGES ──────────────────────────────── */
+    .flash-wrap {
+      position: fixed; top: 5rem; left: 50%; transform: translateX(-50%);
+      z-index: 9999; display: flex; flex-direction: column; gap: .5rem;
+      min-width: 320px; max-width: 600px;
+    }
+    .flash {
+      padding: .9rem 1.5rem;
+      font-family: 'Share Tech Mono', monospace; font-size: .78rem;
+      letter-spacing: .08em; line-height: 1.5; text-align: center;
+      border: 1px solid;
+    }
+    .flash.error   { background: rgba(100,20,20,.95); border-color: rgba(200,80,80,.5); color: #f0a0a0; }
+    .flash.success { background: rgba(20,50,20,.95);  border-color: rgba(80,180,80,.4); color: #90d090; }
+    .flash.warning { background: rgba(70,55,10,.95);  border-color: rgba(200,170,50,.4); color: #e0c860; }
+
     @media (max-width: 680px) {
       .about-grid { grid-template-columns: 1fr; }
       .about-label { position: static; }
@@ -587,7 +636,6 @@
     <li><a href="#instalar">Instalar</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:1.2rem;">
-    <button id="theme-toggle" onclick="toggleTheme()" title="Modo día/noche">☀️ Día</button>
     {% if user %}
       <span style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;color:#8C7F3B;">// {{ user['username'] }}</span>
       {% if user['is_admin'] %}<a href="/admin" style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#BFBB80;text-decoration:none;border:1px solid rgba(140,127,59,.35);padding:.3rem .8rem;">Admin</a>{% endif %}
@@ -596,6 +644,7 @@
       <a href="/login"    style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#6b6a4a;text-decoration:none;">Login</a>
       <a href="/register" style="font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#BFBB80;text-decoration:none;border:1px solid rgba(140,127,59,.35);padding:.3rem .8rem;">Registro</a>
     {% endif %}
+    <button id="theme-toggle" onclick="toggleTheme()" title="Modo día/noche">☀️ Día</button>
   </div>
 </nav>
 
@@ -603,14 +652,13 @@
   {% if messages %}
   <div class="flash-wrap" id="flash-container">
     {% for category, message in messages %}
-    <div class="flash {{ category }}">⚠ {{ message }}</div>
+    <div class="flash {{ category }}">{% if category == 'error' %}⚠ {% elif category == 'success' %}✓ {% endif %}{{ message }}</div>
     {% endfor %}
   </div>
   <script>
     setTimeout(() => {
       const fc = document.getElementById('flash-container');
-      if (fc) fc.style.opacity = '0';
-      setTimeout(() => { if (fc) fc.remove(); }, 400);
+      if (fc) { fc.style.transition='opacity .4s'; fc.style.opacity='0'; setTimeout(()=>fc.remove(),400); }
     }, 5000);
   </script>
   {% endif %}
@@ -819,6 +867,48 @@
   </div>
 </section>
 
+<style>
+  /* Feature cards en modo día */
+  body.day-mode .feature {
+    background: rgba(180,175,140,.5) !important;
+    border-color: rgba(80,90,50,.25) !important;
+  }
+  body.day-mode .feature:hover {
+    background: rgba(160,155,120,.6) !important;
+    border-color: rgba(80,90,50,.5) !important;
+  }
+  body.day-mode .feature h3 { color: #1e2210 !important; }
+  body.day-mode .feature p  { color: #3a3e28 !important; }
+  body.day-mode .feature-num { color: #5a5530 !important; }
+  /* Requisitos en modo día */
+  body.day-mode .req-item {
+    background: rgba(180,175,140,.5) !important;
+    border-color: rgba(80,90,50,.25) !important;
+  }
+  body.day-mode .req-item dt { color: #5a5530 !important; }
+  body.day-mode .req-item dd { color: #1e2210 !important; }
+  /* Sección El Proyecto en modo día */
+  body.day-mode .about-wrap {
+    background: rgba(180,175,140,.4) !important;
+    border-color: rgba(80,90,50,.2) !important;
+  }
+  body.day-mode .about-label { color: #1e2210 !important; }
+  body.day-mode .about-label em { color: #4a4e2a !important; }
+  body.day-mode .about-body p { color: #3a3e28 !important; }
+  body.day-mode .about-body strong { color: #1e2210 !important; }
+  /* Textos hardcodeados en modo día */
+  body.day-mode [style*="color:#d4d09e"] { color: #1e2210 !important; }
+  body.day-mode [style*="color:#eeecd4"] { color: #1e2210 !important; }
+  body.day-mode [style*="color:#a09e7a"] { color: #3a3e28 !important; }
+  body.day-mode [style*="color:#6b6a4a"] { color: #5a5840 !important; }
+  body.day-mode [style*="color:#BFBB80"] { color: #3a3820 !important; }
+  body.day-mode [style*="color:#8C7F3B"] { color: #5a5530 !important; }
+  body.day-mode section, body.day-mode footer { background: #d4d0b8 !important; }
+  body.day-mode .hero { background: #d4d0b8 !important; }
+  body.day-mode .hero-bg {
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(140,135,90,.15) 0%, transparent 65%), #d4d0b8 !important;
+  }
+</style>
 
 <!-- REVIEWS -->
 <section id="resenas" style="position:relative;z-index:1;background:rgba(10,12,8,.5);border-top:1px solid rgba(87,101,51,.12);">
@@ -946,8 +1036,226 @@
   }, { threshold: 0.1 });
   els.forEach(el => io.observe(el));
 
-  // FAQ accordion
-  
+
+  // Star picker
+  const starLabels = document.querySelectorAll('.star-picker label');
+  let selectedRating = 0;
+  function highlightStars(n) {
+    starLabels.forEach((lbl, i) => {
+      // labels are in reverse order (5,4,3,2,1)
+      const val = 5 - i;
+      lbl.style.color = val <= n ? '#8C7F3B' : '#3a3d28';
+    });
+  }
+  function resetStars() {
+    starLabels.forEach((lbl, i) => {
+      const val = 5 - i;
+      lbl.style.color = val <= selectedRating ? '#BFBB80' : '#3a3d28';
+    });
+  }
+  document.querySelectorAll('.star-picker input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      selectedRating = parseInt(inp.value);
+      resetStars();
+    });
+  });
+
+  // Char counter
+  const textarea = document.querySelector('textarea[name="body"]');
+  const counter  = document.getElementById('char-count');
+  if (textarea && counter) {
+    textarea.addEventListener('input', () => { counter.textContent = textarea.value.length; });
+  }
+
+  // Download toast
+  const btn = document.getElementById('dl-btn');
+  const toast = document.getElementById('dl-toast');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    });
+  }
+</script>
+
+
+<!-- ── CHATBOT ─────────────────────────────────────────────────────────── -->
+<style>
+  #chat-toggle {
+    position:fixed; bottom:1.8rem; right:1.8rem; z-index:1500;
+    width:56px; height:56px;
+    background:#576533; border:2px solid #8C7F3B;
+    cursor:crosshair; display:flex; align-items:center; justify-content:center;
+    transition:background .2s, transform .2s;
+    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+    box-shadow:0 4px 24px rgba(87,101,51,.35);
+  }
+  #chat-toggle:hover { background:#8C7F3B; transform:scale(1.07); }
+  #chat-toggle svg { width:24px; height:24px; stroke:#BFBB80; transition:stroke .2s; }
+  #chat-toggle:hover svg { stroke:#0a0b07; }
+  #chat-badge {
+    position:absolute; top:-4px; right:-4px;
+    width:16px; height:16px; border-radius:50%;
+    background:#8b1a1a; border:1px solid #0a0b07;
+    font-family:'Share Tech Mono',monospace; font-size:.55rem;
+    color:#fff; align-items:center; justify-content:center;
+    display:none;
+  }
+  #chat-window {
+    position:fixed; bottom:5.5rem; right:1.8rem; z-index:1499;
+    width:340px; max-height:500px;
+    background:rgba(17,19,9,.98);
+    border:1px solid rgba(140,127,59,.3);
+    display:flex; flex-direction:column;
+    clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
+    box-shadow:0 8px 40px rgba(0,0,0,.6);
+    transform:translateY(16px) scale(.97); opacity:0; pointer-events:none;
+    transition:transform .25s ease, opacity .25s ease;
+  }
+  #chat-window.open { transform:none; opacity:1; pointer-events:all; }
+  .chat-header {
+    display:flex; align-items:center; gap:.8rem;
+    padding:.9rem 1.1rem;
+    border-bottom:1px solid rgba(140,127,59,.18);
+    background:rgba(87,101,51,.15); flex-shrink:0;
+  }
+  .chat-header img { width:28px; height:28px; image-rendering:pixelated; }
+  .chat-header-text { flex:1; }
+  .chat-header-text strong {
+    display:block; font-family:'Oswald',sans-serif; font-size:.95rem;
+    font-weight:500; letter-spacing:.1em; color:#BFBB80;
+  }
+  .chat-header-text span {
+    font-family:'Share Tech Mono',monospace; font-size:.62rem;
+    letter-spacing:.1em; color:#6b6a4a;
+  }
+  .chat-close {
+    background:none; border:none; cursor:crosshair;
+    color:#6b6a4a; font-size:1.1rem; transition:color .2s; padding:.2rem;
+  }
+  .chat-close:hover { color:#BFBB80; }
+  #chat-messages {
+    flex:1; overflow-y:auto; padding:.9rem 1rem;
+    display:flex; flex-direction:column; gap:.7rem;
+    scrollbar-width:thin; scrollbar-color:rgba(140,127,59,.2) transparent;
+  }
+  .cmsg {
+    max-width:85%; padding:.65rem .9rem;
+    font-size:.88rem; line-height:1.55; font-family:'Rajdhani',sans-serif;
+    animation:msgIn .2s ease;
+  }
+  .cmsg.bot {
+    background:rgba(87,101,51,.18); border:1px solid rgba(87,101,51,.25);
+    color:#d4d09e; align-self:flex-start;
+    clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
+  }
+  .cmsg.user {
+    background:rgba(140,127,59,.2); border:1px solid rgba(140,127,59,.3);
+    color:#BFBB80; align-self:flex-end;
+    clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px);
+  }
+  .cmsg.bot strong { color:#BFBB80; }
+  .cmsg.bot a { color:#BFBB80; }
+  .chat-qr {
+    display:flex; flex-wrap:wrap; gap:.4rem;
+    padding:.5rem 1rem .7rem; flex-shrink:0;
+  }
+  .chat-qr-btn {
+    padding:.35rem .75rem;
+    font-family:'Share Tech Mono',monospace; font-size:.65rem;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:#8C7F3B; background:none;
+    border:1px solid rgba(140,127,59,.3);
+    cursor:crosshair; transition:background .15s, color .15s;
+  }
+  .chat-qr-btn:hover { background:rgba(140,127,59,.12); color:#BFBB80; }
+  .chat-input-row {
+    display:flex; gap:.5rem; padding:.8rem 1rem;
+    border-top:1px solid rgba(140,127,59,.15); flex-shrink:0;
+  }
+  #chat-input {
+    flex:1; padding:.55rem .8rem;
+    background:rgba(10,11,7,.8); border:1px solid rgba(140,127,59,.22);
+    color:#eeecd4; font-family:'Rajdhani',sans-serif; font-size:.9rem;
+    outline:none; cursor:text; transition:border-color .2s;
+  }
+  #chat-input:focus { border-color:#8C7F3B; }
+  #chat-input::placeholder { color:#6b6a4a; font-size:.82rem; }
+  #chat-send {
+    padding:.5rem .9rem;
+    background:#576533; border:1px solid #8C7F3B;
+    color:#BFBB80; font-family:'Oswald',sans-serif;
+    font-size:.85rem; font-weight:700; letter-spacing:.08em;
+    cursor:crosshair; transition:background .15s;
+  }
+  #chat-send:hover { background:#8C7F3B; color:#0a0b07; }
+  @keyframes msgIn {
+    from { opacity:0; transform:translateY(6px); }
+    to   { opacity:1; transform:none; }
+  }
+  @media(max-width:400px) {
+    #chat-window { width:calc(100vw - 2rem); right:1rem; }
+  }
+
+  /* Modo día - chatbot */
+  body.day-mode #chat-window  { background: #c4c0a8 !important; }
+  body.day-mode .chat-header  { background: #b4b098 !important; }
+  body.day-mode #chat-messages { background: #c4c0a8 !important; }
+  body.day-mode .cmsg.bot  { background: #b4b098 !important; color: #1e2210 !important; }
+  body.day-mode .cmsg.user { background: #a4a088 !important; color: #1e2210 !important; }
+  body.day-mode #chat-input { background: #b4b098 !important; color: #1e2210 !important; }
+  body.day-mode #chat-send  { background: #6a7040 !important; color: #d4d0b8 !important; }
+  body.day-mode .chat-qr-btn { background: rgba(100,105,65,.2) !important; color: #3a3e28 !important; }
+  body.day-mode #theme-toggle { color: #2a2e18 !important; border-color: rgba(80,90,50,.4) !important; }
+</style>
+
+<button id="chat-toggle" onclick="toggleChat()" title="Soporte">
+  <div id="chat-badge">!</div>
+  <svg id="chat-icon-open" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+  <svg id="chat-icon-close" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</button>
+
+<div id="chat-window">
+  <div class="chat-header">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Bot">
+    <div class="chat-header-text">
+      <strong>Soporte Reconquest</strong>
+      <span>// Asistente automático</span>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div id="chat-messages"></div>
+  <div id="chat-qr" class="chat-qr"></div>
+  <div class="chat-input-row">
+    <input id="chat-input" type="text" placeholder="Escribe tu pregunta..." maxlength="200"
+           onkeydown="if(event.key==='Enter') chatSend()">
+    <button id="chat-send" onclick="chatSend()">↑</button>
+  </div>
+</div>
+
+<script>
+const CHAT_QUICK = ['¿Es gratis?','¿Cómo descargo?','Requisitos','Olvidé contraseña','Reportar bug'];
+
+const BUG_OPTIONS = [
+  'El juego se cierra inesperadamente',
+  'Problema con gráficos o pantalla',
+  'Las tropas no responden',
+  'Error al iniciar el juego',
+  'Problema con el instalador',
+  'Otro problema',
+];
+
+const CHAT_ANSWERS = {
+  '¿Es gratis?': '¡Sí! Reconquest es completamente <strong>gratuito</strong>. Solo necesitas registrarte en la web para poder descargarlo.',
+  '¿Cómo descargo?': 'Para descargar el juego:<br>1. Regístrate o inicia sesión<br>2. Pulsa el botón <strong>Descargar</strong> en la página principal<br>3. Si Windows SmartScreen alerta, es un falso positivo — haz clic en <em>"Más información → Ejecutar de todas formas"</em>',
+  'Requisitos': 'Requisitos mínimos:<br>• <strong>SO:</strong> Windows 10/11 (64-bit)<br>• <strong>RAM:</strong> 4 GB<br>• <strong>GPU:</strong> DirectX 11<br>• <strong>Disco:</strong> ~500 MB libres',
+  'Olvidé contraseña': 'Para recuperar tu contraseña ve a <a href="/forgot" style="color:#BFBB80;">/forgot</a> e introduce tu email. Te enviaremos un enlace de recuperación.',
+};
+
 let chatOpen = false;
 let bugMode = false;
 const userLoggedIn = {{ 'true' if user else 'false' }};
@@ -1010,16 +1318,28 @@ function chatSend() {
     chatHandle(txt);
   }
 }
-let chatHistory = [];
+// ── TEMA ──────────────────────────────────────────────────────────
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'day') {
+    document.body.classList.add('day-mode');
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = '🌙 Noche';
+  }
+})();
 
-const BUG_OPTIONS = [
-  'El juego se cierra inesperadamente',
-  'Problema con gráficos o pantalla',
-  'Las tropas no responden',
-  'Error al iniciar el juego',
-  'Problema con el instalador',
-  'Otro problema',
-];
+function toggleTheme() {
+  const btn = document.getElementById('theme-toggle');
+  if (document.body.classList.toggle('day-mode')) {
+    localStorage.setItem('theme', 'day');
+    btn.textContent = '🌙 Noche';
+  } else {
+    localStorage.setItem('theme', 'night');
+    btn.textContent = '☀️ Día';
+  }
+}
+
+let chatHistory = [];
 
 async function chatHandle(text) {
   if (text === 'Reportar bug') {
@@ -1037,7 +1357,6 @@ async function chatHandle(text) {
       document.getElementById('chat-input').placeholder = 'Describe el problema...';
       document.getElementById('chat-input').focus();
     } else {
-      // Enviar a la IA con prompt de soporte técnico
       await chatHandleBug(text);
     }
     return;
@@ -1051,6 +1370,7 @@ async function chatHandle(text) {
 
   chatHistory.push({ role: 'user', content: text });
 
+  // Mostrar indicador de escritura
   const typing = document.createElement('div');
   typing.className = 'cmsg bot';
   typing.id = 'chat-typing';
@@ -1076,9 +1396,9 @@ async function chatHandle(text) {
 
   document.getElementById('chat-input').disabled = false;
   document.getElementById('chat-send').disabled = false;
+  document.getElementById('chat-input').focus();
   chatRenderQR(CHAT_QUICK);
 }
-
 async function chatHandleBug(bugType) {
   chatAddUser(bugType);
   document.getElementById('chat-qr').innerHTML = '';
@@ -1092,7 +1412,7 @@ async function chatHandleBug(bugType) {
   chatScroll();
 
   const bugMessages = [
-    { role: 'user', content: `Soy el asistente de soporte de Reconquest. El jugador tiene el siguiente problema: "${bugType}". Dame consejos concretos para solucionarlo. El juego es un RTS para Windows 10/11 64-bit hecho con Unity 6. Responde en español, de forma concisa y amigable, sin razonamiento interno.` }
+    { role: 'user', content: `El jugador tiene el siguiente problema con el juego Reconquest (RTS para Windows 10/11 64-bit hecho con Unity 6): "${bugType}". Dame consejos concretos y breves para solucionarlo. Responde en español, de forma concisa y amigable, sin mostrar razonamiento interno.` }
   ];
 
   try {
@@ -1105,7 +1425,6 @@ async function chatHandleBug(bugType) {
     typing.remove();
     const reply = data.reply || data.error || 'No se pudo obtener ayuda en este momento.';
     chatAddBot(reply);
-    // Guardar el bug en el panel admin
     await fetch('/api/bug', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1125,7 +1444,6 @@ async function chatHandleBug(bugType) {
 async function submitBug(description) {
   bugMode = false;
   document.getElementById('chat-input').placeholder = 'Escribe tu pregunta...';
-  document.getElementById('chat-qr').innerHTML = '';
   document.getElementById('chat-input').disabled = true;
   document.getElementById('chat-send').disabled = true;
 
@@ -1147,6 +1465,7 @@ async function submitBug(description) {
 
   document.getElementById('chat-input').disabled = false;
   document.getElementById('chat-send').disabled = false;
+  document.getElementById('chat-input').focus();
   chatRenderQR(CHAT_QUICK);
 }
 </script>
