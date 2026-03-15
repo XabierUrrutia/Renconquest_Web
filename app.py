@@ -181,6 +181,36 @@ def send_reset_email(to_email, token):
 # AI HELPER
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _clean_reply(text):
+    """Elimina bloques de razonamiento interno que algunos modelos incluyen."""
+    import re
+    if not text:
+        return ""
+    # Eliminar bloques <think>...</think>
+    text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+    # Si el texto tiene un patrón de razonamiento seguido de respuesta final, quedarse con lo último
+    # Detectar patrones típicos: "Okay, ..." / "Let me..." / "The user..." antes de la respuesta real
+    lines = text.strip().split("\n")
+    # Buscar la última línea no vacía que parezca una respuesta real en español
+    # Si más de la mitad del texto parece inglés/razonamiento, buscar la parte en español
+    reasoning_keywords = ['okay', 'let me', 'the user', 'i need', 'i should', 'make sure',
+                          'double-check', 'recall', 'remember', 'check if', 'yep', 'so the',
+                          'just state', 'stick to', 'concisely']
+    clean_lines = []
+    in_reasoning = False
+    for line in lines:
+        low = line.lower().strip()
+        if any(kw in low for kw in reasoning_keywords):
+            in_reasoning = True
+            continue
+        if in_reasoning and not low:
+            continue
+        in_reasoning = False
+        clean_lines.append(line)
+    result = "\n".join(clean_lines).strip()
+    return result if result else text.strip()
+
+
 FREE_MODELS = [
     "nvidia/nemotron-3-super-120b-a12b:free",
     "nvidia/nemotron-3-nano-30b-a3b:free",
@@ -215,7 +245,8 @@ def openrouter_request(messages, max_tokens=300):
             with urllib.request.urlopen(req, timeout=10) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 msg = result["choices"][0]["message"]
-                reply = msg.get("content") or msg.get("reasoning") or ""
+                reply = msg.get("content") or ""
+                reply = _clean_reply(reply)
                 if reply.strip():
                     app.logger.info("OpenRouter used model: %s", model)
                     return reply.strip()
