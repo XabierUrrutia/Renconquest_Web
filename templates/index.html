@@ -685,7 +685,27 @@
   <p class="hero-tagline">Estrategia en tiempo real &nbsp;·&nbsp; La revolución fracasó</p>
 
   <div class="download-block">
-    {% if installer_exists %}
+    {% if mobile %}
+    <!-- MOBILE: no se puede descargar -->
+    <div style="padding:1.4rem 2.5rem; border:1px solid rgba(160,112,112,.35);
+                background:rgba(160,112,112,.08);
+                font-family:'Share Tech Mono',monospace; font-size:.82rem;
+                letter-spacing:.12em; color:#e8b0b0; text-align:center; max-width:460px; line-height:1.8;">
+      <span style="font-size:1.2rem;">📱</span><br>
+      Reconquest no está disponible para dispositivos móviles.<br>
+      <span style="color:var(--muted);font-size:.72rem;">Accede desde un PC con Windows o Linux para descargar.</span>
+    </div>
+    {% elif client_os == 'mac' %}
+    <!-- macOS: no soportado -->
+    <div style="padding:1.4rem 2.5rem; border:1px solid rgba(160,112,112,.35);
+                background:rgba(160,112,112,.08);
+                font-family:'Share Tech Mono',monospace; font-size:.82rem;
+                letter-spacing:.12em; color:#e8b0b0; text-align:center; max-width:460px; line-height:1.8;">
+      <span style="font-size:1.2rem;">🍎</span><br>
+      Reconquest no está disponible para macOS.<br>
+      <span style="color:var(--muted);font-size:.72rem;">Disponible para Windows 10/11 y Linux (64-bit).</span>
+    </div>
+    {% elif installer_exists %}
     <a href="{{ url_for('download') if user else url_for('login', next='/download') }}" class="btn-download" id="dl-btn">
       <svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2.5" stroke-linecap="square">
@@ -693,10 +713,19 @@
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
+      {% if client_os == 'linux' %}
+      Descargar para Linux
+      {% else %}
       Descargar Ahora
+      {% endif %}
     </a>
     <p class="download-meta">
-      v{{ version }} &nbsp;·&nbsp; Windows 64-bit
+      v{{ version }} &nbsp;·&nbsp;
+      {% if client_os == 'linux' %}
+        Linux 64-bit &nbsp;·&nbsp; <span>.sh</span>
+      {% else %}
+        Windows 64-bit &nbsp;·&nbsp; <span>.exe</span>
+      {% endif %}
       {% if installer_size %}&nbsp;·&nbsp; <span>{{ installer_size }} MB</span>{% endif %}
     </p>
     {% else %}
@@ -793,24 +822,41 @@
         <div class="step-n">PASO<br>01</div>
         <div class="step-body">
           <h3>Descarga el instalador</h3>
+          {% if client_os == 'linux' %}
+          <p>Haz clic en <strong>"Descargar para Linux"</strong> en la parte superior.
+             Se descargará el script <code>Reconquest_Setup_v{{ version }}.sh</code>.</p>
+          {% else %}
           <p>Haz clic en <strong>"Descargar Ahora"</strong> en la parte superior.
              Se descargará directamente el instalador <code>Reconquest_Setup_v{{ version }}.exe</code>.</p>
+          {% endif %}
         </div>
       </div>
       <div class="step reveal">
         <div class="step-n">PASO<br>02</div>
         <div class="step-body">
+          {% if client_os == 'linux' %}
+          <h3>Dale permisos y ejecuta</h3>
+          <p>Abre una terminal en la carpeta de descargas y ejecuta:</p>
+          <p><code>chmod +x Reconquest_Setup_v{{ version }}.sh</code></p>
+          <p><code>./Reconquest_Setup_v{{ version }}.sh</code></p>
+          {% else %}
           <h3>Ejecuta el instalador</h3>
           <p>Abre el <code>.exe</code> descargado. Si aparece el aviso de Windows SmartScreen,
              haz clic en <strong>"Más información" → "Ejecutar de todas formas"</strong>.</p>
+          {% endif %}
         </div>
       </div>
       <div class="step reveal">
         <div class="step-n">PASO<br>03</div>
         <div class="step-body">
+          {% if client_os == 'linux' %}
+          <h3>Sigue las instrucciones</h3>
+          <p>El script instalará los archivos necesarios y creará un acceso directo en tu escritorio.</p>
+          {% else %}
           <h3>Sigue el asistente</h3>
           <p>El instalador copiará todos los archivos necesarios en la carpeta de tu elección
              y creará un acceso directo en el escritorio.</p>
+          {% endif %}
         </div>
       </div>
       <div class="step reveal">
@@ -820,7 +866,11 @@
           <dl class="sysreq">
             <div class="req-item">
               <dt>Sistema Operativo</dt>
+              {% if client_os == 'linux' %}
+              <dd>Ubuntu 20.04+ / Debian 11+ (64-bit)</dd>
+              {% else %}
               <dd>Windows 10 / 11 (64-bit)</dd>
+              {% endif %}
             </div>
             <div class="req-item">
               <dt>Memoria RAM</dt>
@@ -828,7 +878,11 @@
             </div>
             <div class="req-item">
               <dt>Tarjeta gráfica</dt>
+              {% if client_os == 'linux' %}
+              <dd>OpenGL 3.2+ / Vulkan compatible</dd>
+              {% else %}
               <dd>DirectX 11 compatible</dd>
+              {% endif %}
             </div>
             <div class="req-item">
               <dt>Almacenamiento</dt>
@@ -1412,7 +1466,7 @@ async function chatHandleBug(bugType) {
   chatScroll();
 
   const bugMessages = [
-    { role: 'user', content: `El jugador tiene el siguiente problema con el juego Reconquest (RTS para Windows 10/11 64-bit hecho con Unity 6): "${bugType}". Dame consejos concretos y breves para solucionarlo. Responde en español, de forma concisa y amigable, sin mostrar razonamiento interno.` }
+    { role: 'user', content: `El jugador tiene el siguiente problema con el juego Reconquest (RTS para Windows/Linux 64-bit hecho con Unity 6): "${bugType}". Dame consejos concretos y breves para solucionarlo. Responde en español, de forma concisa y amigable, sin mostrar razonamiento interno.` }
   ];
 
   try {

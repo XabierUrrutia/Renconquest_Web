@@ -14,8 +14,38 @@ logging.basicConfig(level=logging.INFO)
 
 # ── Config ────────────────────────────────────────────────────────────────────
 GAME_VERSION   = "1.0.0"
-INSTALLER_NAME = "Reconquest_Setup_v1.0.0.exe"
-INSTALLER_URL  = "https://github.com/XabierUrrutia/Renconquest_Web/releases/download/v1.0.0/Reconquest_Setup_v1.0.0.exe"
+INSTALLER_WIN  = "Reconquest_Setup_v1.0.0.exe"
+INSTALLER_LNX  = "Reconquest_Setup_v1.0.0.sh"
+INSTALLER_URL_WIN = "https://github.com/XabierUrrutia/Renconquest_Web/releases/download/v1.0.0/Reconquest_Setup_v1.0.0.exe"
+INSTALLER_URL_LNX = "https://github.com/XabierUrrutia/Renconquest_Web/releases/download/v1.0.0/Reconquest_Setup_v1.0.0.sh"
+
+# Alias de retrocompatibilidad
+INSTALLER_NAME = INSTALLER_WIN
+INSTALLER_URL  = INSTALLER_URL_WIN
+
+
+def detect_client_os(user_agent_str):
+    """Detecta el SO del cliente a partir del User-Agent.
+    Devuelve: 'windows', 'linux', 'mac', 'android', 'ios' o 'unknown'.
+    """
+    ua = (user_agent_str or "").lower()
+    # Móviles primero (pueden contener 'linux' en Android)
+    if "iphone" in ua or "ipad" in ua or "ipod" in ua:
+        return "ios"
+    if "android" in ua:
+        return "android"
+    # Escritorio
+    if "windows" in ua:
+        return "windows"
+    if "macintosh" in ua or "mac os" in ua:
+        return "mac"
+    if "linux" in ua or "x11" in ua:
+        return "linux"
+    return "unknown"
+
+
+def is_mobile(client_os):
+    return client_os in ("android", "ios")
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
@@ -311,6 +341,9 @@ def index():
     dl_row = db_fetchone("SELECT COUNT(*) as cnt FROM download_log")
     total_downloads = dl_row["cnt"] if dl_row else 0
 
+    client_os = detect_client_os(request.user_agent.string)
+    mobile    = is_mobile(client_os)
+
     return render_template("index.html",
         version=GAME_VERSION,
         downloads=total_downloads,
@@ -320,17 +353,27 @@ def index():
         reviews=reviews,
         avg_rating=avg_rating,
         user_reviewed=user_reviewed,
+        client_os=client_os,
+        mobile=mobile,
     )
 
 @app.route("/download")
 @login_required
 def download():
+    client_os = detect_client_os(request.user_agent.string)
+    if is_mobile(client_os) or client_os == "mac":
+        flash("Reconquest solo está disponible para PC (Windows/Linux).", "error")
+        return redirect(url_for("index"))
+
     db_execute(
         "INSERT INTO download_log (user_id,ip,user_agent,ts) VALUES (?,?,?,?)",
         (session["user_id"], request.remote_addr, request.user_agent.string[:120], _now())
     )
     db_commit()
-    return redirect(INSTALLER_URL)
+
+    if client_os == "linux":
+        return redirect(INSTALLER_URL_LNX)
+    return redirect(INSTALLER_URL_WIN)
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -737,8 +780,9 @@ Información clave:
 - Ambientación: Ucronía histórica en Portugal — la Revolución de los Claveles de 1974 fracasó y desencadena una guerra civil ficticia
 - El jugador conquista fábricas para obtener recursos, gestiona tropas y captura sectores hasta destruir la base enemiga
 - Completamente GRATUITO. Requiere registro para descargar
-- Solo disponible para Windows 10/11 (64-bit)
-- Requisitos: 4 GB RAM, DirectX 11, ~500 MB de disco
+- Disponible para Windows 10/11 (64-bit) y Linux (64-bit). No hay versión para macOS ni móviles
+- Requisitos Windows: 4 GB RAM, DirectX 11, ~500 MB de disco
+- Requisitos Linux: 4 GB RAM, OpenGL 3.2+/Vulkan, ~500 MB de disco
 - Si Windows SmartScreen alerta, es un falso positivo. Clic en "Más información → Ejecutar de todas formas"
 - Desarrollado con Unity 6 y C# como Trabajo de Fin de Grado
 - No tiene multijugador
